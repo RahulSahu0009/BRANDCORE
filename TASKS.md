@@ -11,8 +11,8 @@
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
 | M0-01 | Create repository structure and all required documents | Mritunjay | DONE | — | All 8 core docs exist; 0 TypeScript files; FILE_INVENTORY.json accurate (61 files); 3/3 tests passed 2026-11-04 |
-| M0-02 | Initialize git repository and create develop branch | Mritunjay | TODO | M0-01 | `git status` clean on develop; main and develop branches exist |
-| M0-03 | Verify Cloudflare Python Workers proof-of-concept gate | Mritunjay | TODO | M0-01 | All 5 POC checks in `docs/ARCHITECTURE.md` §9 pass with evidence |
+| M0-02 | Initialize git repository and create develop branch | Mritunjay | DONE | M0-01 | main branch initialized; initial commit 32a2381; develop branch created; 74 files; GitHub push pending — 2026-11-04 |
+| M0-03 | Verify Cloudflare Python Workers proof-of-concept gate | Mritunjay | VERIFIED | M0-01 | All 5 POC checks in `docs/ARCHITECTURE.md` §9 pass with evidence — 2026-11-04 |
 
 ---
 
@@ -26,7 +26,7 @@
 | M1-04 | R2 binding: store and retrieve a private test object | Mritunjay | VERIFIED | M1-01 | `POST /api/poc/r2` → `env.ASSETS.put/get` verified with fixed POC key; 2026-11-04 |
 | M1-06 | Workers AI binding: bounded structured response validated with Pydantic | Mritunjay | **VERIFIED** | M1-01 | Gate B and Gate B-sub approved. `brandcore.workers.dev` registered. Attempts 1–3 failed (upstream error; Pydantic schema mismatch ×2). Schema-fix approval granted 2026-11-04: `claim_type: str \| None`, `numeric_value: str \| int \| float \| None`, raw+usage captured before Pydantic; 9/9 local tests passed. Attempt 4 (final authorization): HTTP 200 (4.262s); Pydantic PASS; `claim_type: null`, `numeric_value: 40` (int) accepted; `unit: "percent"`, `qualifier: "up to"`; prompt_tokens: 86, completion_tokens: 64, total_tokens: 150; raw and usage captured. Evidence: `docs/evidence/M1-06/attempt-4-final/`. 2026-11-04 |
 | M1-07 | Document POC results in `docs/ARCHITECTURE.md` and `docs/TOOLING_AUDIT.md` | Mritunjay | DONE | M1-01–M1-06 | §9 updated with evidence for all checks; TOOLING_AUDIT.md updated; 2026-11-04 |
-| M1-08 | POC route security guard: `require_development_env` dependency on `/api/poc/*` | Mritunjay | DONE | M1-06 | `src/app/api/dependencies.py` created; `src/app/main.py` updated; `wrangler.jsonc` `vars.BRANDCORE_ENV` set for default (development) and production; 8 new tests in `test_poc_guard.py` — 17/17 total tests pass; security-checklist controls 5, 9, 18 updated; 2026-11-04 |
+| M1-08 | POC route security guard: `require_development_env` dependency on `/api/poc/*` | Mritunjay | DONE | M1-06 | `src/app/api/dependencies.py` created; `src/app/main.py` updated; `wrangler.jsonc` `vars.BRANDCORE_ENV` set for default (disabled) and production; 11 guard tests in `test_poc_guard.py` — 20/20 total tests pass; security-checklist controls 5, 9, 18 updated; 2026-11-04 |
 
 ---
 

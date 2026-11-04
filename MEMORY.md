@@ -68,25 +68,23 @@
 
 ## Remaining Tasks (prioritized)
 
-1. **M0-02**: Git repository initialization — requires explicit user approval
-2. **Gate C**: Repository relocation to `C:\dev\BRANDCORE` — approved but not yet executed
-3. **Milestone 2**: Data foundation (D1 schema, migrations, repositories)
+1. **M0-02**: Git repository initialized ✅ — push to GitHub pending (user action: create empty repo, then run push commands)
+2. **Milestone 2**: Data foundation (D1 schema, migrations, repositories)
 
 ---
 
 ## Blockers & Decisions Required
 
-- **M1 complete and secured.** All 5 POC checks PASS. POC route guard implemented and tested. Repository organized. Ready for Milestone 2.
-- **workers.dev subdomain:** Registered as `brandcore.workers.dev` (2026-11-04).
+- **M1 complete and secured.** All 5 POC checks PASS. POC route guard implemented and tested.
+- **Git repository initialized** at `C:\BRANDCORE` — main branch, initial commit `32a2381`, develop branch created.
+- **GitHub push pending** — user must create empty `BRANDCORE` repo on GitHub, then run the push commands in TEAM_HANDOFF.md.
 - **Cloudflare account IDs:** `wrangler.jsonc` still has `<D1_DATABASE_ID>` placeholder. Real ID requires user approval.
-- **Repository relocation:** Gate C approved; move `C:\Users\smrit\OneDrive\Desktop\BRANDCORE` → `C:\dev\BRANDCORE` before next heavy install session.
-- **Git init:** No git repository. Requires explicit user approval.
 
 ---
 
 ## Tests & Checks Run
 
-- `uv run pytest backend/tests/ -v`: **17/17 passed** (pytest 9.2.0, Python 3.14.6, 2026-11-04)
+- `python -m pytest backend/tests/ -v`: **20/20 passed** (pytest 9.1.1, Python 3.14.6, 2026-11-04)
 - `npm run build`: **success** — 145.63 kB JS / 47.08 kB gzip (2026-11-04)
 - `curl GET /api/health`: **HTTP 200** `{"status":"ok","version":"0.1.0"}` (2026-11-04)
 - `curl GET /`: **HTTP 200** `text/html` (2026-11-04)
@@ -119,7 +117,7 @@ Gate B and Gate B-sub approved. `brandcore.workers.dev` registered.
 
 ## NEXT ACTION
 
-**Task:** M1 complete. Proceed to Milestone 2 — Data Foundation (D1 schema, migrations, repositories).
-**Pre-requisite:** M0-02 git init and Gate C repository relocation require explicit user approval before heavy install work.
+**Task:** Push to GitHub — create empty `BRANDCORE` repo on GitHub, add remote, push main and develop.
+**Then:** Invite Rahul Sahu and Arvind Shah as collaborators. See `docs/TEAM_HANDOFF.md` for branch and onboarding instructions.
 
-*Last updated: 2026-11-04 — M1-08 POC route guard DONE; repository organization complete; 17/17 tests pass*
+*Last updated: 2026-11-04 — git init complete; 20/20 tests pass; main commit 32a2381; develop branch created; GitHub push pending*
