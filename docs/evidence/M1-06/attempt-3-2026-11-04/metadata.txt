@@ -1,0 +1,73 @@
+M1-06 Workers AI — Authorized retry (attempt 3)
+================================================
+
+Date: 2026-11-04 (local)
+Authorization: exactly one additional inference; same model, same synthetic input,
+same parameters and unchanged application code. No automatic retries.
+
+Model:    @cf/meta/llama-3.1-8b-instruct-fp8
+Binding:  env.AI, "remote": true (wrangler.jsonc)
+Endpoint: POST http://127.0.0.1:8791/api/poc/ai
+Worker:   .venv\Scripts\pywrangler.exe dev --port 8791 --log-level debug
+Runtime:  wrangler 4.157.0
+Started:  2026-11-04 17:25:19 local
+Request:  2026-11-04 17:25:58 local
+
+Command:
+  curl.exe -sS -X POST -D m1-06-retry.headers.txt -o m1-06-retry.body.txt \
+    -w "HTTP_STATUS:%{http_code} TIME_TOTAL:%{time_total}" \
+    http://127.0.0.1:8791/api/poc/ai
+
+HTTP result
+-----------
+Status:   HTTP/1.1 500 Internal Server Error
+Duration: 3.994 s (wrangler log) / 3.996480 s (curl)
+Body:     Internal Server Error
+Headers:  Content-Length: 21; Content-Type: text/plain; charset=utf-8
+
+Exact synthetic input (unchanged from attempt 2)
+------------------------------------------------
+System: You are a precise JSON extractor. Output only valid JSON.
+User:   Extract the marketing claim below into JSON with exactly these keys:
+        claim_text, claim_type, numeric_value, unit, qualifier, scope.
+        Use null for missing fields. Return only the JSON object, no explanation.
+
+        Claim: Our platform reduces customer onboarding time by up to 40 percent.
+
+Size: system 57 characters + user 280 characters = 337 characters total.
+max_tokens: 256. No temperature or other sampling parameter overrides.
+
+Source integrity (unchanged before and after the request)
+--------------------------------------------------------
+src/app/api/poc.py  SHA-256 F3F3237316E18D595C1469C4989519662CB417D6EED08FCED27E1E245F726136
+wrangler.jsonc      SHA-256 9C9CF99EF373D3F2E10C882DC32DB03890ADB27B08A75E532BB3D3AC5923ED79
+
+No prompt, model, parameter, binding or application-code change was made.
+
+Inference outcome
+-----------------
+- No InferenceUpstreamError occurred. The model returned a response.
+- The response parsed as JSON: execution reached AiClaimExtraction construction
+  at src/app/api/poc.py:122.
+- Raw response text was not logged by the application.
+- Token usage was NOT captured. The endpoint reads result["usage"] only after
+  Pydantic validation succeeds; the validation exception discards result/usage.
+  No additional inference is authorized to re-capture it.
+
+Pydantic validation: FAIL
+-------------------------
+AiClaimExtraction: 1 validation error
+
+numeric_value
+  Input should be a valid string [type=string_type, input_value=40, input_type=int]
+  For further information visit https://errors.pydantic.dev/2.14/v/string_type
+
+Note: claim_type passed this attempt. Attempt 2 failed on both claim_type=None
+and numeric_value=40 (int).
+
+Final result: FAIL (HTTP 500). M1-06 remains BLOCKED.
+
+Artifacts in this directory:
+- response.headers.txt
+- response.body.txt
+- traceback.log (ANSI-stripped copy of the Worker stderr traceback)

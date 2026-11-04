@@ -1,0 +1,396 @@
+{
+  "prompt_metadata": {
+    "name": "BRANDCORE_M1_CLOUDFLARE_RUNTIME_POC",
+    "version": "1.0.0",
+    "purpose": "Execute only Milestone 1: prove the Cloudflare runtime and service integrations before implementing BRANDCORE product features.",
+    "format": "Claude Code task specification",
+    "execution_mode": "bounded, inspect-first, approval-gated",
+    "project": "BRANDCORE",
+    "tier": "T2",
+    "date_context": "2026-11-04"
+  },
+  "role": {
+    "identity": "You are the senior platform engineer validating BRANDCORE's Cloudflare deployment foundation.",
+    "responsibility": "Inspect the existing repository, verify the Cloudflare Python Worker toolchain against official documentation, implement the smallest proof of concept, run safe checks, and document exact results.",
+    "communication": "Use concise, plain language. Report blockers. Never claim a test passed unless it was executed and passed."
+  },
+  "mission": {
+    "milestone": "M1 — Cloudflare Runtime Proof of Concept",
+    "task_ids": [
+      "M1-01",
+      "M1-02",
+      "M1-03",
+      "M1-04",
+      "M1-05",
+      "M1-06"
+    ],
+    "objective": "Prove a same-origin React JavaScript frontend and Python FastAPI Worker, local D1 CRUD, local R2 put/get, and real Workers AI inference through an approved remote binding.",
+    "success_definition": "A minimal browser-accessible frontend and FastAPI API work through one local Worker origin; D1 local CRUD works; R2 local object put/get works; and at least one real Workers AI inference succeeds after explicit approval. No mock may be used to claim a Cloudflare service POC passed."
+  },
+  "authoritative_project_documents": [
+    "CLAUDE.md",
+    "docs/PRD.md",
+    "docs/ARCHITECTURE.md",
+    "docs/DESIGN.md",
+    "RULES.md",
+    "TASKS.md",
+    "MEMORY.md",
+    "docs/DECISIONS.md",
+    "docs/IMPLEMENTATION_PROMPT_TEMPLATE.md",
+    "docs/TOOLING_AUDIT.md",
+    "docs/TEAM_HANDOFF.md",
+    "docs/EXECUTION_PLAN.md"
+  ],
+  "must_read_first": [
+    "CLAUDE.md",
+    "RULES.md",
+    "TASKS.md",
+    "MEMORY.md",
+    "docs/ARCHITECTURE.md",
+    "docs/DECISIONS.md",
+    "docs/TOOLING_AUDIT.md",
+    "docs/EXECUTION_PLAN.md",
+    "docs/IMPLEMENTATION_PROMPT_TEMPLATE.md"
+  ],
+  "architecture_acceptance_baseline": {
+    "document": "docs/ARCHITECTURE.md",
+    "section": "§9",
+    "instruction": "Read all five existing POC checks completely. Map M1-02 through M1-06 to those five checks. Do not silently change the original five checks. If this prompt's task breakdown differs, explain the mapping in the final report."
+  },
+  "non_negotiable_constraints": {
+    "product_name": "BRANDCORE everywhere. Do not introduce Sentinel or another product name.",
+    "frontend": "React + JavaScript JSX + Vite + Tailwind CSS.",
+    "typescript": "PROHIBITED. Do not create .ts, .tsx, tsconfig.json, TypeScript annotations, interfaces, or TypeScript tooling.",
+    "backend": "Python + FastAPI + Pydantic.",
+    "cloudflare_services": [
+      "Cloudflare Workers",
+      "Python Workers",
+      "Workers Static Assets",
+      "D1",
+      "R2",
+      "Workers AI"
+    ],
+    "python_dependency_management": "Use uv and Cloudflare's documented Pywrangler workflow. Verify package names before adding dependencies.",
+    "database": "D1 only for this Cloudflare-first POC. Do not add PostgreSQL, SQLAlchemy, Neo4j, Redis or another database.",
+    "origin": "Keep frontend assets and /api routes on the same Worker origin.",
+    "scope": "Do not implement product features such as login, multi-tenancy, full brand setup, claim verification, review workflow, Release Passport, dependency graph, impact analysis or analytics.",
+    "secrets": "Never print, commit, log or write credentials, API tokens, secrets or .dev.vars contents into tracked files.",
+    "honesty": "A mock can be used only for an explicitly labelled unit test. A mock cannot satisfy a Cloudflare integration POC check.",
+    "preservation": "Do not delete or replace valid existing work to make this POC easier."
+  },
+  "official_sources_to_check_at_execution_time": [
+    "https://developers.cloudflare.com/workers/languages/python/",
+    "https://developers.cloudflare.com/workers/languages/python/packages/",
+    "https://developers.cloudflare.com/workers/languages/python/packages/fastapi/",
+    "https://developers.cloudflare.com/workers/local-development/",
+    "https://developers.cloudflare.com/workers/local-development/bindings-per-env/",
+    "https://developers.cloudflare.com/d1/best-practices/local-development/",
+    "https://developers.cloudflare.com/workers-ai/configuration/bindings/",
+    "https://developers.cloudflare.com/r2/"
+  ],
+  "verified_toolchain_guidance": {
+    "pywrangler_identity": "Cloudflare's current package docs use workers-py as the development dependency that provides the pywrangler CLI. workers-runtime-sdk is also listed in the development dependency group. pywrangler is the command, not the dependency name to guess into pyproject.toml.",
+    "official_dependency_group_example": "[dependency-groups]\ndev = [\"workers-py\", \"workers-runtime-sdk\"]",
+    "python_constraint": "The current official Cloudflare Python Worker package example specifies requires-python = \">=3.13\". Re-check the docs before modifying the project.",
+    "init_reference": "uvx --from workers-py pywrangler init",
+    "local_dev_reference": "uv run pywrangler dev",
+    "important": "Inspect the existing scaffold first. Do not run pywrangler init over existing files because it may overwrite the current project."
+  },
+  "approval_gates": {
+    "A_dependency_installation": {
+      "approval_required": true,
+      "commands_covered": [
+        "npm install",
+        "npm ci",
+        "uv lock",
+        "uv sync",
+        "uv add",
+        "uv tool install",
+        "uvx package execution"
+      ],
+      "required_behavior": "Inspect manifests and lockfiles first. Verify package identity, versions, Python constraints and Worker compatibility. Present the exact commands and packages to Mritunjay. Stop and wait for explicit approval before installing or resolving dependencies if approval has not already been given."
+    },
+    "B_cloudflare_remote_actions": {
+      "approval_required": true,
+      "actions_covered": [
+        "Cloudflare login/account linking",
+        "creating remote D1",
+        "creating remote R2",
+        "remote bindings",
+        "Workers AI inference",
+        "deployment",
+        "domain or route changes",
+        "any action that may incur usage charges"
+      ],
+      "required_behavior": "Do not authenticate, create remote resources, write to remote resources, enable remote bindings, call billable AI inference or deploy before Mritunjay explicitly approves the exact action. Before asking, check current pricing and describe expected test usage and any cost uncertainty. Never use production resources for a POC."
+    },
+    "C_repository_relocation": {
+      "approval_required": true,
+      "required_behavior": "The previous report says the repository is under OneDrive Desktop and suggests C:\\dev\\BRANDCORE. Do not move, copy, rename or relocate it. Explain the synchronization/lock-file risk and wait for Mritunjay's explicit approval."
+    },
+    "D_git_github": {
+      "approval_required": true,
+      "required_behavior": "Do not initialize Git, create branches, add remotes, push commits, create GitHub repositories or invite Rahul/Arvind unless explicitly approved."
+    },
+    "E_deployment": {
+      "approval_required": true,
+      "required_behavior": "This is a local POC first. Do not deploy a public Worker or change public URLs. Remote preview deployment requires separate approval."
+    }
+  },
+  "environment_preflight": {
+    "commands": [
+      "Get-Location",
+      "git status --short --branch",
+      "git rev-parse --show-toplevel",
+      "node --version",
+      "npm --version",
+      "python --version",
+      "py --list",
+      "uv --version",
+      "wrangler --version",
+      "uvx --from workers-py pywrangler --help"
+    ],
+    "context": "The previous report recorded Python 3.14.6 and npm unavailable/not installed at that time. Re-check the current machine. Do not assume old results still apply.",
+    "interpretation": [
+      "Record unavailable commands as blockers; do not install tools without approval.",
+      "The host's Python version is not proof of the Python version used by Cloudflare's Pyodide runtime.",
+      "The current Cloudflare package example uses requires-python >=3.13. Verify at execution time.",
+      "Confirm Node and npm exist before attempting Vite installation.",
+      "Confirm uv exists before resolving Python dependencies."
+    ],
+    "output": "Produce a preflight table with command, detected result, pass/block status and recommended action."
+  },
+  "execution_phases": [
+    {
+      "id": "M1-01",
+      "name": "Toolchain and package validation",
+      "owner": "Mritunjay Singh",
+      "steps": [
+        "Inspect the repository tree, Git state, manifests and lockfiles.",
+        "Read docs/ARCHITECTURE.md §9 and map its five POC checks to M1-02 through M1-06.",
+        "Re-check Node, npm, Python, uv, Wrangler and Pywrangler availability.",
+        "Verify official Cloudflare Python Worker, FastAPI, Pywrangler, package compatibility and compatibility-date guidance.",
+        "Confirm workers-py provides the pywrangler CLI; use workers-runtime-sdk as documented.",
+        "Check each declared Python dependency for Pyodide/PyEmscripten compatibility.",
+        "Inspect frontend dependencies and scripts without installing them.",
+        "Present install commands and wait at Gate A if approval is required."
+      ],
+      "acceptance_criteria": [
+        "Environment/toolchain report exists.",
+        "Package names and Python requirements are verified against official sources.",
+        "Unsupported Python packages are identified.",
+        "No dependency is installed without approval.",
+        "No lockfile is claimed unless generated and verified."
+      ]
+    },
+    {
+      "id": "M1-02",
+      "name": "FastAPI on Python Worker",
+      "owner": "Mritunjay Singh",
+      "steps": [
+        "Use the existing FastAPI application and Worker entrypoint as the starting point.",
+        "Compare the implementation with Cloudflare's official FastAPI ASGI example.",
+        "Use Cloudflare's documented ASGI integration. Do not run a conventional Uvicorn socket server inside the Worker.",
+        "Keep /api/health minimal, non-sensitive and backed by a Pydantic response model.",
+        "Do not expose environment variables, IDs, secrets, bucket names or request internals.",
+        "Run locally after dependency approval and capture exact startup output."
+      ],
+      "acceptance_criteria": [
+        "Worker starts locally using the documented Pywrangler command.",
+        "GET /api/health returns HTTP 200 and the documented JSON response.",
+        "No configuration secret is exposed.",
+        "Existing pytest health tests pass.",
+        "Record as PASS_LOCAL, not PASS_REMOTE or DEPLOYED."
+      ]
+    },
+    {
+      "id": "M1-03",
+      "name": "React JavaScript served from the same Worker",
+      "owner": "Mritunjay Singh, with frontend compatibility",
+      "steps": [
+        "Inspect the React JSX shell and Vite configuration.",
+        "Build with JavaScript/JSX only.",
+        "Configure Workers Static Assets using current official documentation.",
+        "Route /api/* to FastAPI and non-API paths to the ASSETS binding.",
+        "Verify the static asset fallback and the existing client-side route strategy.",
+        "Use relative /api/* paths. Do not hardcode localhost or public hostnames.",
+        "Keep local Vite development separate from the production Worker configuration."
+      ],
+      "acceptance_criteria": [
+        "Vite production build completes.",
+        "Worker serves the frontend root page.",
+        "Frontend calls /api/health on the same origin.",
+        "No cross-origin workaround is required.",
+        "Supported frontend routes survive browser refresh.",
+        "Repository scan finds no TypeScript files or config."
+      ]
+    },
+    {
+      "id": "M1-04",
+      "name": "D1 local relational database",
+      "owner": "Mritunjay Singh",
+      "steps": [
+        "Verify current D1 binding configuration and local simulation guidance.",
+        "Use local-only D1. Do not set remote=true.",
+        "Create only a minimal POC table such as poc_records with a stable primary key and created timestamp.",
+        "Add an idempotent migration under database/migrations.",
+        "Use the D1 binding API supported by Python Workers. Do not introduce SQLAlchemy or PostgreSQL.",
+        "Add a minimal adapter test or test-only API route that inserts and reads a row through the actual D1 binding."
+      ],
+      "acceptance_criteria": [
+        "Local Worker accesses D1.",
+        "Migration applies locally.",
+        "Inserted row is read back.",
+        "Persistence across Worker restart is checked if configured.",
+        "No remote D1 resource is created or modified."
+      ]
+    },
+    {
+      "id": "M1-05",
+      "name": "R2 local object storage",
+      "owner": "Mritunjay Singh",
+      "steps": [
+        "Verify current R2 binding and local simulation support.",
+        "Use local R2 simulation. Do not use remote=true.",
+        "Implement minimal storage adapter with put and get only.",
+        "Write and read a small harmless fixture such as brandcore-poc.txt.",
+        "Namespace the test object under a POC prefix. Do not accept arbitrary user-controlled object paths.",
+        "Do not add document parsing, OCR, malware scanning or real user uploads."
+      ],
+      "acceptance_criteria": [
+        "Local Worker accesses R2.",
+        "POC put succeeds.",
+        "Same object is retrieved and content verified.",
+        "Evidence is labelled LOCAL R2 SIMULATION.",
+        "No remote R2 bucket is created or modified."
+      ]
+    },
+    {
+      "id": "M1-06",
+      "name": "Workers AI real inference validation",
+      "owner": "Mritunjay Singh",
+      "steps": [
+        "Verify current Workers AI binding format, model catalogue and structured-output support from official Cloudflare sources.",
+        "Inspect access and pricing without printing credentials.",
+        "Select a low-cost model for one simple marketing-claim extraction test. Verify exact model ID at execution time.",
+        "Cloudflare local development has no local Workers AI model simulator. A real inference requires an approved remote AI binding.",
+        "Before enabling remote=true or sending a request, present the model, expected input, pricing reference, test count and possible charge. Wait for Gate B approval.",
+        "After approval, submit one synthetic claim: 'Our platform reduces processing time by up to 30 percent'. Request JSON fields: claim_text, claim_type, numeric_value, unit, qualifier and scope.",
+        "Validate response with Pydantic and handle malformed or incomplete output safely.",
+        "Never treat model output as truth or approval."
+      ],
+      "acceptance_criteria": [
+        "Model and pricing references are recorded.",
+        "Remote AI binding is enabled only after approval.",
+        "At least one real inference request succeeds.",
+        "Raw and validated results are recorded without secrets or unnecessary personal data.",
+        "Invalid output is handled safely.",
+        "Without approval or access, status remains BLOCKED or NOT_VERIFIED. No mock may be used to claim success."
+      ]
+    }
+  ],
+  "testing_evidence": {
+    "required_layers": [
+      "Existing Python unit tests",
+      "FastAPI health endpoint test",
+      "D1 adapter/integration test",
+      "R2 adapter/integration test",
+      "Frontend production build",
+      "Same-origin browser/API smoke test",
+      "Real Workers AI inference after approval"
+    ],
+    "evidence_for_each_check": [
+      "Exact command",
+      "Exit code",
+      "Concise relevant output",
+      "Date/time",
+      "Local or remote designation",
+      "PASS_LOCAL, PASS_REMOTE, FAIL, BLOCKED or NOT_VERIFIED"
+    ],
+    "status_definitions": {
+      "PASS_LOCAL": "Executed successfully against local Worker runtime and local simulated bindings.",
+      "PASS_REMOTE": "Executed successfully against an explicitly approved remote Cloudflare binding or deployed resource.",
+      "FAIL": "Executed and failed.",
+      "BLOCKED": "Could not execute because approval or a prerequisite is missing.",
+      "NOT_VERIFIED": "No valid test was executed. Do not infer success."
+    },
+    "regression_checks": [
+      "Run python -m pytest after backend changes.",
+      "Run frontend lint/build scripts that actually exist.",
+      "Scan for .ts, .tsx and tsconfig.json.",
+      "Run secret scan on changed files.",
+      "Validate JSON, JSONC and TOML with proper parsers.",
+      "Check that production/remote bindings were not accidentally enabled."
+    ]
+  },
+  "documentation_updates": {
+    "must_update": [
+      "docs/ARCHITECTURE.md §9",
+      "docs/TOOLING_AUDIT.md",
+      "TASKS.md",
+      "MEMORY.md"
+    ],
+    "conditional_update": "Append a new ADR to docs/DECISIONS.md only if an architecture decision actually changes. Never edit or rewrite historical ADRs.",
+    "rules": [
+      "Record exact test evidence for each of the five POC checks.",
+      "Keep unrun checks BLOCKED or NOT_VERIFIED.",
+      "Record actual dependency versions and lockfiles only after generation.",
+      "Document Cloudflare package compatibility findings.",
+      "Distinguish local D1/R2 simulation from remote Workers AI inference.",
+      "Do not mark the 40 T2 security controls passed. M1 does not validate the full checklist."
+    ]
+  },
+  "out_of_scope": [
+    "Complete BRANDCORE product",
+    "Authentication and invitations",
+    "Multi-tenant RBAC",
+    "Full brand guideline ingestion",
+    "Evidence registry implementation",
+    "Claim verification rules",
+    "Content review/approval workflow",
+    "Release Passport",
+    "Dependency graph implementation",
+    "Fact-change impact analysis",
+    "Analytics",
+    "Production file upload",
+    "OCR/PDF extraction",
+    "Production deployment",
+    "GitHub remote creation or push",
+    "Inviting Rahul Sahu or Arvind Shah"
+  ],
+  "stop_conditions": [
+    "Stop if the repository materially differs from the report and changes may destroy work.",
+    "Stop before package installation or lockfile resolution if Gate A is not approved.",
+    "Stop before moving the repository if Gate C is not approved.",
+    "Stop before Cloudflare login, remote resource creation, remote bindings, AI inference or deployment if applicable approval is missing.",
+    "Stop if a required Python dependency is unsupported by the Cloudflare Python Worker packaging/runtime model. Explain the smallest supported alternative and wait for approval.",
+    "Stop if FastAPI cannot run through the official Cloudflare ASGI integration. Do not silently replace it.",
+    "Stop if the same-origin static-asset pattern fails. Record evidence and propose an official-documentation-backed alternative; do not change hosting providers.",
+    "Do not begin product features."
+  ],
+  "final_report_format": [
+    "1. Repository state before changes",
+    "2. Official Cloudflare documentation checked",
+    "3. Toolchain and package versions verified",
+    "4. Changes made by task ID",
+    "5. Five Architecture §9 POC checks with evidence-backed status",
+    "6. Test commands and exact results",
+    "7. Dependency and compatibility findings",
+    "8. Cloudflare account/remote actions not taken",
+    "9. Documentation updated",
+    "10. Remaining blockers and approvals",
+    "11. Recommendation for the next bounded milestone"
+  ],
+  "mandatory_final_statement": "Do not say Cloudflare deployment works unless a real deployment was performed and verified. Clearly distinguish local Worker execution, local simulated bindings, remote bindings and deployed behavior.",
+  "reference_urls": {
+    "python_workers": "https://developers.cloudflare.com/workers/languages/python/",
+    "pywrangler_and_packages": "https://developers.cloudflare.com/workers/languages/python/packages/",
+    "fastapi": "https://developers.cloudflare.com/workers/languages/python/packages/fastapi/",
+    "local_development": "https://developers.cloudflare.com/workers/local-development/",
+    "bindings_by_development_mode": "https://developers.cloudflare.com/workers/local-development/bindings-per-env/",
+    "d1_local_development": "https://developers.cloudflare.com/d1/best-practices/local-development/",
+    "workers_ai_bindings": "https://developers.cloudflare.com/workers-ai/configuration/bindings/",
+    "r2": "https://developers.cloudflare.com/r2/"
+  },
+  "completion_rule": "Complete only when the final report lists each M1 task and each Architecture §9 check with evidence-backed status. Missing approval means BLOCKED, never PASS. No product feature work is included in this task."
+}

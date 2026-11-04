@@ -1,0 +1,77 @@
+{
+  "manifest_version": "1.0.0",
+  "generated": "2026-11-04",
+  "project": "BRANDCORE",
+  "team": "SMRITUNJAY837",
+  "event": "CodeNexus India 2026",
+  "bootstrap_phase": "PHASE-0 through PHASE-5 complete",
+
+  "stack": {
+    "frontend": {
+      "framework": "React 18",
+      "language": "JavaScript/JSX only — no TypeScript",
+      "build_tool": "Vite",
+      "styling": "Tailwind CSS",
+      "typescript": false
+    },
+    "backend": {
+      "language": "Python 3.13+",
+      "framework": "FastAPI",
+      "validation": "Pydantic",
+      "runtime": "Cloudflare Python Workers (Beta)",
+      "dependency_manager": "uv"
+    },
+    "cloudflare": {
+      "worker": "single Worker for API and static assets",
+      "database": "D1 (SQLite-compatible)",
+      "storage": "R2 (private)",
+      "ai": "Workers AI",
+      "deployment": "Wrangler / pywrangler"
+    }
+  },
+
+  "eight_core_documents": {
+    "CLAUDE.md": "EXISTS",
+    "docs/PRD.md": "EXISTS",
+    "docs/ARCHITECTURE.md": "EXISTS",
+    "docs/DESIGN.md": "EXISTS",
+    "RULES.md": "EXISTS",
+    "TASKS.md": "EXISTS",
+    "MEMORY.md": "EXISTS",
+    "docs/DECISIONS.md": "EXISTS — ADR-001 through ADR-008"
+  },
+
+  "tests": {
+    "backend/tests/test_health.py": "3 passed — verified 2026-11-04",
+    "frontend_tests": "NOT RUN — npm dependencies not installed",
+    "e2e_tests": "NOT IMPLEMENTED"
+  },
+
+  "known_unverified_areas": [
+    "Cloudflare Python Workers ASGI integration — Beta, not tested",
+    "pywrangler local dev — package name not verified on PyPI",
+    "D1 binding in Python Worker runtime — not tested",
+    "R2 binding in Python Worker runtime — not tested",
+    "Workers AI binding in Python Worker runtime — not tested",
+    "Vite build served by Worker via Workers Static Assets — not tested",
+    "npm dependencies not installed (frontend/package.json present, npm install not run)",
+    "uv.lock not generated (uv sync not run)",
+    "Cloudflare account IDs are placeholders in wrangler.jsonc",
+    "All 40 T2 security checklist controls are NOT VERIFIED",
+    "Performance targets not measured (no deployed build)"
+  ],
+
+  "adrs": [
+    "ADR-001: React JavaScript/JSX, no TypeScript",
+    "ADR-002: Cloudflare as deployment platform",
+    "ADR-003: One Worker serving API and frontend assets",
+    "ADR-004: D1 relational model, no graph database",
+    "ADR-005: LLM advisory, deterministic checks authoritative",
+    "ADR-006: Fictional demo data and constrained uploads",
+    "ADR-007: Exclude 10k-websites cinematic pipeline",
+    "ADR-008: Browser cannot access bindings directly"
+  ],
+
+  "next_milestone": "Milestone 1 — Cloudflare Runtime Proof of Concept (owner: Mritunjay Singh)",
+  "file_inventory": "FILE_INVENTORY.json"
+}

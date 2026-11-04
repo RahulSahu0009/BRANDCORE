@@ -1,0 +1,272 @@
+{
+  "name": "BRANDCORE_PRE_GITHUB_REPOSITORY_CLEANUP",
+  "version": "1.0",
+  "purpose": "Conservative cleanup of BRANDCORE before Git initialization. Audit first, remove only clearly disposable files, preserve all source-of-truth documents and M1 evidence, run regression checks, and do not initialize or push Git.",
+  "role": "Act as a cautious repository maintainer and security-minded build engineer. Inspect every candidate before deletion. Report exact paths and reasons. Never silently delete ambiguous files.",
+  "non_negotiable": {
+    "product_name": "BRANDCORE only. Never introduce Sentinel or another product name.",
+    "frontend": "React + JavaScript JSX only. TypeScript is prohibited.",
+    "no_git": "Do not run git init, git add, git commit, create branches, add remotes, push, create a GitHub repository, or invite collaborators.",
+    "no_cloudflare": "Do not log in, create remote resources, deploy, or call Workers AI.",
+    "no_relocation": "Do not move or rename the repository. Repository relocation is a separate user action.",
+    "no_dependency_changes": "Do not install, remove, update, or resolve dependencies. Do not modify package manifests or lockfiles.",
+    "no_secrets": "Never print secret values. Report only file paths and whether secret-like content was detected."
+  },
+  "required_inspection": [
+    "Confirm current path and verify this is the BRANDCORE repository.",
+    "Inventory all files and hidden files. Exclude traversal into very large generated directories unless needed for classification.",
+    "Read CLAUDE.md, RULES.md, README.md, .gitignore, TASKS.md, MEMORY.md, docs/ARCHITECTURE.md, docs/DECISIONS.md, docs/TOOLING_AUDIT.md, docs/EXECUTION_PLAN.md, docs/TEAM_HANDOFF.md, docs/API_CONTRACT.md, docs/TEST_PLAN.md and docs/IMPLEMENTATION_PROMPT_TEMPLATE.md when present.",
+    "Inspect package.json, frontend/package.json, pyproject.toml, uv.lock, wrangler.jsonc, migrations, test configuration, scripts and imports.",
+    "Search for references to every proposed deletion candidate before deleting it.",
+    "Check M1 evidence for secret-like values without printing contents.",
+    "Run the existing test baseline using already-installed tools only. Do not install anything."
+  ],
+  "classification": {
+    "must_keep": [
+      "CLAUDE.md",
+      "docs/PRD.md",
+      "docs/ARCHITECTURE.md",
+      "docs/DESIGN.md",
+      "RULES.md",
+      "TASKS.md",
+      "MEMORY.md",
+      "docs/DECISIONS.md",
+      "README.md",
+      "CONTRIBUTING.md",
+      ".github/pull_request_template.md",
+      "All T2 security, threat model, secrets policy, testing and deployment documents.",
+      "docs/API_CONTRACT.md, docs/TEST_PLAN.md, docs/EXECUTION_PLAN.md, docs/TEAM_HANDOFF.md, docs/TOOLING_AUDIT.md and docs/IMPLEMENTATION_PROMPT_TEMPLATE.md when present.",
+      "All application source, tests, configuration, SQL migrations and schema source.",
+      "All docs/evidence/M1-* evidence, especially docs/evidence/M1-06/attempt-4-final/.",
+      "Valid package-lock.json and uv.lock if generated.",
+      ".env.example and .dev.vars.example only if confirmed to contain placeholders and no real credentials.",
+      "wrangler.jsonc with safe placeholder IDs and documented binding configuration."
+    ],
+    "safe_delete_only_after_reference_check": [
+      {
+        "patterns": [
+          "**/__pycache__/**",
+          "**/*.pyc",
+          ".pytest_cache/**",
+          "**/.pytest_cache/**",
+          ".coverage",
+          "htmlcov/**"
+        ],
+        "reason": "Regenerable Python/test caches."
+      },
+      {
+        "patterns": [
+          "frontend/.vite/**",
+          "frontend/node_modules/.vite/**"
+        ],
+        "reason": "Regenerable Vite cache."
+      },
+      {
+        "patterns": [
+          "frontend/dist/**",
+          "dist/**"
+        ],
+        "reason": "Regenerable build output. Confirm the Worker build command recreates it before deletion."
+      },
+      {
+        "patterns": [
+          "*.log",
+          "**/*.log"
+        ],
+        "reason": "Generated logs only. Preserve anything used as M1 evidence."
+      },
+      {
+        "patterns": [
+          ".DS_Store",
+          "Thumbs.db",
+          "desktop.ini"
+        ],
+        "reason": "Operating-system metadata."
+      },
+      {
+        "patterns": [
+          "skill-doctor.mjs"
+        ],
+        "reason": "Delete only if confirmed to be a local Claude-skill diagnostic, unreferenced by package scripts/docs/runtime, and not part of BRANDCORE."
+      },
+      {
+        "patterns": [
+          "10k-websites/**",
+          "ffmpeg-recipes.md",
+          "prompt-laws.md",
+          "scrub-pipeline.md",
+          "design-package.md",
+          "deploy.md"
+        ],
+        "reason": "These are cinematic marketing-site skill materials and not BRANDCORE app requirements. Delete only repository copies that are unreferenced by required project documentation. Never delete installed/global skill copies outside this repository."
+      }
+    ],
+    "exclude_from_git_but_do_not_necessarily_delete": [
+      "node_modules/",
+      ".venv/",
+      ".wrangler/",
+      "frontend/node_modules/",
+      "frontend/dist/",
+      "dist/",
+      "coverage/",
+      ".pytest_cache/",
+      "__pycache__/",
+      "*.pyc",
+      ".env",
+      ".env.* except .env.example",
+      ".dev.vars",
+      ".dev.vars.* except .dev.vars.example",
+      "*.log",
+      ".DS_Store",
+      "Thumbs.db",
+      "desktop.ini"
+    ],
+    "never_delete_without_explicit_approval": [
+      "Application source imported or executed by code, tests, scripts or config.",
+      "Database migrations and schema files.",
+      "Any file under docs/evidence/.",
+      "The eight core documents and T2 security documents.",
+      "Lockfiles.",
+      "Environment example files until verified safe.",
+      ".wrangler/state or local D1/R2 state, because it may contain useful M1 POC data.",
+      "Unknown-purpose files.",
+      "Files outside the BRANDCORE repository."
+    ]
+  },
+  "special_security_review": {
+    "files": [
+      "src/app/api/poc.py",
+      "src/app/main.py",
+      "src/worker.py"
+    ],
+    "instruction": "Inspect whether /api/poc/* is mounted and accessible in deployed Worker environments. These routes may perform D1/R2 test writes. Do not delete POC source or evidence automatically. If exposed, propose the smallest safe fix: remove production route mounting while preserving tests/evidence, or add a verified environment guard. Show exact changes and tests, then stop for Mritunjay's approval before editing or deleting POC routes."
+  },
+  "execution_phases": [
+    {
+      "id": "CLEAN-01",
+      "name": "Inventory and dry-run classification",
+      "actions": [
+        "Complete all required inspection.",
+        "Create docs/evidence/repository-cleanup/cleanup-manifest.md with inventory, classifications, references checked and baseline tests.",
+        "Do not delete anything during this phase.",
+        "Present SAFE-TO-DELETE and NEEDS-APPROVAL lists separately."
+      ],
+      "acceptance": [
+        "Each proposed deletion has an exact path, reason and reference-check result.",
+        "No required document, source, migration, test or M1 evidence is proposed for deletion.",
+        "Ambiguous files are retained pending approval."
+      ]
+    },
+    {
+      "id": "CLEAN-02",
+      "name": "Conservative removal",
+      "actions": [
+        "After inventory, remove only confirmed generated caches and OS metadata.",
+        "Remove skill-doctor.mjs or cinematic skill copies only if the classification rules are satisfied and there are no project references.",
+        "Do not delete node_modules or .venv just to reduce Git size. Leave them on disk and exclude from Git.",
+        "Do not delete .wrangler/state or local binding data.",
+        "Do not modify /api/poc route exposure without explicit approval."
+      ],
+      "acceptance": [
+        "Only clearly disposable files were removed.",
+        "No source, test, migration, lockfile or evidence file was removed.",
+        "The cleanup manifest records every deletion."
+      ]
+    },
+    {
+      "id": "CLEAN-03",
+      "name": "Git hygiene",
+      "actions": [
+        "Inspect existing .gitignore and make the smallest precise update.",
+        "Ignore generated dependencies, caches, local environments, secrets, Wrangler state, build output and OS metadata.",
+        "Allow .env.example and .dev.vars.example.",
+        "Do not ignore package-lock.json, uv.lock, migrations or M1 evidence.",
+        "Do not use broad patterns that hide source code or documentation."
+      ],
+      "acceptance": [
+        ".gitignore changes are minimal and explained.",
+        "Lockfiles and evidence remain eligible for Git.",
+        "Secrets and generated files are excluded."
+      ]
+    },
+    {
+      "id": "CLEAN-04",
+      "name": "Regression and security checks",
+      "actions": [
+        "Run existing Python tests using existing environment only.",
+        "Run frontend build/lint only if dependencies are already installed and scripts exist.",
+        "Validate wrangler.jsonc, package manifests and pyproject.toml.",
+        "Scan for .ts, .tsx and tsconfig.json.",
+        "Scan changed candidates for secrets without displaying values.",
+        "Verify imports, scripts and configuration references still resolve.",
+        "Verify all M1 evidence remains present."
+      ],
+      "acceptance": [
+        "Tests pass or exact failures are documented.",
+        "No dependencies were installed or changed.",
+        "No secret values are exposed.",
+        "No TypeScript files were introduced.",
+        "M1 evidence remains intact."
+      ]
+    },
+    {
+      "id": "CLEAN-05",
+      "name": "Final readiness report",
+      "actions": [
+        "Report before/after file count and approximate size.",
+        "List exact deletions and reasons.",
+        "List files left on disk but excluded from Git.",
+        "List ambiguous files retained.",
+        "Report POC endpoint exposure review and approvals still needed.",
+        "Provide Git initialization commands for later but do not execute them."
+      ],
+      "acceptance": [
+        "Repository is cleaner without loss of source, evidence or configuration.",
+        "No Git repository was initialized and no push occurred.",
+        "Every remaining unknown-purpose file is listed."
+      ]
+    }
+  ],
+  "approval_policy": {
+    "allowed_without_additional_approval": [
+      "Delete confirmed generated Python, pytest and Vite caches and OS metadata.",
+      "Add specific .gitignore entries after inspecting the current file."
+    ],
+    "approval_required": [
+      "Delete any file not clearly generated or not explicitly covered by safe-delete rules.",
+      "Delete cinematic skill/reference files if project docs reference them.",
+      "Remove or change POC API routes.",
+      "Delete local D1/R2/Wrangler state.",
+      "Delete evidence, logs with audit value or user-authored documents.",
+      "Change manifests or lockfiles."
+    ],
+    "prohibited": [
+      "git init",
+      "git add",
+      "git commit",
+      "git remote add",
+      "git push",
+      "GitHub repository creation",
+      "collaborator invitations",
+      "Cloudflare login",
+      "remote resource creation",
+      "deployment",
+      "repository relocation"
+    ]
+  },
+  "final_report_sections": [
+    "Repository path and initial state",
+    "Before/after file count and approximate size",
+    "Files deleted and reasons",
+    "Files retained as project documents/source/evidence",
+    "Files excluded from Git but retained on disk",
+    "Files requiring Mritunjay's approval",
+    "POC endpoint security findings",
+    ".gitignore changes",
+    "Post-cleanup tests and exact results",
+    "Secret scan result without exposing values",
+    "Confirmation that Git was not initialized and nothing was pushed",
+    "Readiness recommendation for GitHub initialization"
+  ],
+  "completion_rule": "Cleanup completes only after a full inventory, exact deletion log, .gitignore review, POC endpoint security review and post-cleanup test report. Do not initialize Git or publish anything."
+}

@@ -1,0 +1,885 @@
+{
+  "prompt_metadata": {
+    "name": "BRANDCORE Repository Bootstrap and Engineering Foundation",
+    "version": "1.0.0",
+    "format": "Claude Code structured execution prompt",
+    "created_on": "2026-11-04",
+    "target_agent": "Claude Code",
+    "project": "BRANDCORE",
+    "execution_mode": "bounded_repository_bootstrap",
+    "autonomy_level": "A1",
+    "project_tier": "T2",
+    "important_scope_note": "Create and verify the initial repository foundation, eight core documents, supporting documentation, security/deployment files, and minimal health-check scaffolding. Do not attempt to implement the complete BRANDCORE product in this bootstrap run."
+  },
+  "instruction_for_agent": "You are the senior engineer responsible for bootstrapping the BRANDCORE repository. Work inside the current project directory. First inspect the repository and all supplied reference materials. Then create or minimally update the project structure and documents specified in this JSON. Follow the phases in order. Do not skip the Cloudflare runtime feasibility gate. Do not implement the full business workflow. Keep every claim about implementation status evidence-based. When finished, run the listed local validation checks and provide a factual report of files created/changed, checks run, results, blockers, and the next bounded implementation task. This JSON is the task specification, not permission to deploy, create paid resources, push to GitHub, or expose secrets.",
+  "source_of_truth_and_precedence": {
+    "priority_order": [
+      "Security and user safety",
+      "Correctness and verified behavior",
+      "Accessibility and user experience",
+      "Maintainability",
+      "Simplicity",
+      "Delivery speed",
+      "Novelty"
+    ],
+    "precedence": [
+      "Explicit project decisions and constraints in this JSON, including the user's no-TypeScript decision and BRANDCORE-only product naming.",
+      "The supplied DEVELOPMENT_WORKFLOW v2 and its T2 requirements.",
+      "The supplied AUDIT_REPORT findings and the supplied ECC_INTEGRATION_GUIDE v2.",
+      "The BRANDCORE product definition and constraints embedded in this JSON.",
+      "The existing repository documents, preserving accurate material with minimal diffs.",
+      "Other skills or general engineering conventions only when relevant and non-conflicting."
+    ],
+    "materials_to_inspect_if_present": [
+      "DEVELOPMENT_WORKFLOW.md (v2)",
+      "AUDIT_REPORT.md",
+      "ECC_INTEGRATION_GUIDE.md (v2)",
+      "10k-websites/SKILL.md or the supplied SKILL.md",
+      "10k-websites references: deploy.md, design-package.md, ffmpeg-recipes.md, prompt-laws.md, scrub-pipeline.md, troubleshooting.md",
+      "skill-doctor.mjs",
+      "Any existing BRANDCORE project documents and starter source files"
+    ],
+    "source_handling": [
+      "Read each available source file fully before using it. Do not rely on filenames or partial snippets.",
+      "If source files are not present in the local working directory, do not pretend to have read them. Use the explicit source-derived decisions and rules included in this JSON, and report which source files were unavailable locally.",
+      "Do not copy the user's global Claude Code skills, hooks, MCP configuration, credentials, or machine-specific directories into this repository.",
+      "Do not install or update skills, plugins, hooks, MCP servers, or executable tooling as part of this bootstrap."
+    ],
+    "resolved_source_conflicts": [
+      "DEVELOPMENT_WORKFLOW v2 governs the engineering lifecycle. Use the order: discovery/specification, architecture and data flows, threat model, design, rules/tasks/tests, CLAUDE.md, then implementation.",
+      "The supplied 10k-websites skill is a specialised cinematic scroll-driven marketing-site workflow. It prescribes plain HTML/CSS/vanilla JavaScript, generated hero video, Higgsfield, FFmpeg and Hostinger. It is not a general application frontend skill and must not govern BRANDCORE's React application UI.",
+      "Do not apply the 10k-websites fixed tool pipeline, no-build-step rule, video-scrubbing architecture, FFmpeg recipes, Higgsfield workflow or Hostinger deployment process to BRANDCORE.",
+      "Use one project-specific docs/DESIGN.md as the sole visual authority for BRANDCORE's application UI.",
+      "ECC is an on-demand specialist library. Do not assume nested ECC skills or hooks activate automatically. Do not register hooks or invoke overlapping commands without review.",
+      "Treat skill-doctor.mjs as a local developer-machine diagnostic only. Do not put it in application runtime code or CI."
+    ]
+  },
+  "project_identity": {
+    "product_name": "BRANDCORE",
+    "team_name": "SMRITUNJAY837",
+    "event": "CodeNexus India 2026",
+    "team_members": [
+      {
+        "name": "Mritunjay Singh",
+        "role": "Team Lead, AI and Python Backend Lead",
+        "ownership": [
+          "backend/**",
+          "database/**",
+          "wrangler.jsonc",
+          "pyproject.toml",
+          "docs/ARCHITECTURE.md",
+          "docs/API_CONTRACT.md",
+          "Cloudflare integration and deployment"
+        ]
+      },
+      {
+        "name": "Rahul Sahu",
+        "role": "Content Review Experience Lead",
+        "ownership": [
+          "frontend/src/features/content-review/**",
+          "frontend/src/components/content/**",
+          "content-review page composition and content-specific tests"
+        ]
+      },
+      {
+        "name": "Arvind Shah",
+        "role": "Brand Operations and Release Governance Lead",
+        "ownership": [
+          "frontend/src/features/brand-governance/**",
+          "frontend/src/features/release-governance/**",
+          "frontend/src/components/brand/**"
+        ]
+      }
+    ],
+    "product_one_liner": "BRANDCORE helps teams keep brand content accurate and consistent with approved facts, evidence and guidelines, and identifies approved content that may need revalidation when the facts behind it change.",
+    "core_positioning": "Evidence-linked, explainable and change-aware brand governance.",
+    "team_leader_email": "smritunjay837@gmail.com",
+    "product_naming_rule": "Use BRANDCORE as the only product name in every document, screen, diagram, package name and user-facing string. Do not introduce a separate product or module brand name."
+  },
+  "objective": {
+    "primary": "Create a clean, collaborative, Cloudflare-oriented BRANDCORE repository foundation that the three team members can clone, understand and extend independently.",
+    "deliverables": [
+      "The eight required core project documents.",
+      "Supporting product, API, design, testing, collaboration, tooling and execution documentation.",
+      "T2 security and privacy documentation.",
+      "Cloudflare deployment and rollback documentation.",
+      "A minimal frontend/backend health-check scaffold, not a complete product.",
+      "A clear task board with separately owned workstreams for Mritunjay, Rahul and Arvind.",
+      "A file inventory and starter manifest that accurately reflect the generated repository."
+    ],
+    "explicit_non_goal": "Do not build all product features in this run. The output is a verified starter repository and implementation blueprint from which later, bounded prompts will implement one milestone at a time."
+  },
+  "product_definition": {
+    "problem": "Brand content is produced by multiple people and can contain inconsistent messaging, unsupported claims, claims stronger than the approved evidence, missing qualifiers, expired offers or claims based on facts that later change. Reviewers often compare content with scattered guidelines and evidence manually. Teams may not know which older approved content depended on a fact that is no longer current.",
+    "users": [
+      "Brand administrator: maintains approved facts, evidence references, terminology and policy rules.",
+      "Content creator: submits copy for review and makes corrections.",
+      "Reviewer or approver: examines findings and makes the final human decision for a specific content version.",
+      "Brand operations lead: monitors releases, stale content and revalidation work."
+    ],
+    "round_2_primary_workflow": [
+      "Open the seeded BRANDCORE demo workspace.",
+      "View or create an approved fact with scope, qualifier and evidence reference.",
+      "Submit a content item.",
+      "Use AI to extract candidate claims into structured data.",
+      "Validate model output with Pydantic.",
+      "Run deterministic checks against approved facts and policy rules.",
+      "Display findings with the exact affected claim, reason, relevant fact/evidence and a suggested correction.",
+      "Allow a human reviewer to approve, request changes or reject the exact content version.",
+      "Create an immutable Release Passport bound to the content hash, policy version and evidence/fact versions used.",
+      "Change an approved fact and find dependent releases.",
+      "Mark affected releases STALE and queue them for human revalidation without rewriting the historical passport."
+    ],
+    "required_finding_types": [
+      "Unsupported claim",
+      "Numeric mismatch",
+      "Claim stronger than approved evidence",
+      "Missing qualifier or disclaimer",
+      "Scope mismatch, such as product, region, date or audience",
+      "Expired offer or date",
+      "Unapproved terminology"
+    ],
+    "product_principles": [
+      "Evidence-linked and explainable findings.",
+      "Deterministic logic is authoritative for exact values, dates, qualifiers, terminology, scope and dependency tracking.",
+      "AI assists with claim extraction, semantic interpretation, explanations and correction suggestions. AI does not prove truth and cannot approve content.",
+      "Humans retain final approval authority.",
+      "Content versions and Release Passports preserve history.",
+      "Changing a fact triggers impact analysis; it must not silently rewrite a previous approval.",
+      "Do not replace the review experience with a generic compliance score. Show findings, evidence coverage, unresolved items and review status."
+    ],
+    "round_2_scope": {
+      "in_scope": [
+        "Seeded fictional demo brand.",
+        "Approved facts and evidence references.",
+        "Content submission and immutable content versions.",
+        "AI-assisted claim extraction with schema validation.",
+        "Deterministic rule checks for the specified finding types.",
+        "Human review and decision recording.",
+        "Version-bound Release Passport.",
+        "Fact-change impact query and STALE status.",
+        "Simple stale-release impact queue and revalidation action."
+      ],
+      "out_of_scope": [
+        "Real multi-tenant customer onboarding.",
+        "Production authentication, enterprise SSO or advanced organization administration unless separately approved and fully secured.",
+        "Public self-service registration.",
+        "Unrestricted public document uploads.",
+        "Live social-media or public-web crawling.",
+        "Video or audio content review.",
+        "Automated logo recognition or full visual brand comparison.",
+        "Model fine-tuning or custom training.",
+        "Payments, billing and subscription management.",
+        "Claims that AI independently proves truth or legal compliance.",
+        "Non-essential animation, elaborate onboarding and analytics dashboards that do not support the primary workflow."
+      ],
+      "demo_data_boundary": "Use invented sample brand data only. Do not enter real customer confidential information or private documents. Demo role switching, if used, is a demonstration convenience and must not be represented as production authentication.",
+      "upload_boundary": "Do not enable arbitrary public uploads until server-side size limits, file-type sniffing, access control, private R2 storage, safe parsing and appropriate scanning are implemented. For the demo, use approved text and allow-listed references plus seeded private assets."
+    }
+  },
+  "fixed_technical_constraints": {
+    "frontend": {
+      "framework": "React",
+      "language": "JavaScript only",
+      "component_syntax": "JSX",
+      "build_tool": "Vite",
+      "styling": "Tailwind CSS with project tokens in docs/DESIGN.md",
+      "allowed_extensions": [
+        ".js",
+        ".jsx",
+        ".css",
+        ".html",
+        ".json"
+      ],
+      "forbidden": [
+        "TypeScript",
+        ".ts",
+        ".tsx",
+        "tsconfig.json",
+        "TypeScript interfaces",
+        "type-generation steps"
+      ]
+    },
+    "backend": {
+      "language": "Python",
+      "minimum_version": "3.13",
+      "framework": "FastAPI",
+      "runtime": "Cloudflare Python Workers using the supported ASGI integration path",
+      "validation": "Pydantic",
+      "dependency_manager": "uv"
+    },
+    "cloudflare": {
+      "single_application_origin": true,
+      "frontend_delivery": "Workers Static Assets serving the built Vite frontend",
+      "api": "FastAPI routes under /api/* on the same Worker",
+      "database": "Cloudflare D1 relational database",
+      "object_storage": "Private Cloudflare R2 bucket",
+      "ai": "Cloudflare Workers AI binding",
+      "deployment_tooling": "Wrangler and Pywrangler"
+    },
+    "data_access": [
+      "The browser must never access D1, R2 or Workers AI directly. All private binding access goes through the backend.",
+      "Use prepared/parameterized D1 statements. Never concatenate untrusted values into SQL.",
+      "Do not assume D1 is a conventional network PostgreSQL server.",
+      "Do not add SQLAlchemy with a PostgreSQL connection, PostgreSQL, Neo4j, another backend host or another database without an explicit ADR and user approval.",
+      "Use a small repository/adapter boundary around D1 access. Keep SQL out of React components, route handlers and general business services."
+    ],
+    "cloudflare_runtime_gate": {
+      "status_at_prompt_creation": "Python Workers are documented as Beta. Treat this architecture as conditional until the exact project proof of concept passes.",
+      "required_before_product_feature_work": [
+        "FastAPI health endpoint runs in pywrangler local development.",
+        "Vite production build is served by the same Worker through Workers Static Assets.",
+        "D1 binding can perform a parameterized write and read in the intended Python Worker runtime.",
+        "R2 binding can store and retrieve a private test object through the backend.",
+        "Workers AI binding can return a bounded structured response which is validated with Pydantic.",
+        "A deployed preview is opened and tested if credentials and resources are available. If not, clearly report the unverified deployment step."
+      ],
+      "verification_rule": "Verify current official Cloudflare documentation and package compatibility before choosing or updating package versions and Wrangler/Pywrangler configuration. Record the date and official URLs in docs/ARCHITECTURE.md and docs/TOOLING_AUDIT.md. Never invent a successful integration."
+    }
+  },
+  "required_repository_documents": {
+    "eight_core_documents": [
+      {
+        "path": "CLAUDE.md",
+        "purpose": "Short Claude Code entry point, 150 lines maximum.",
+        "must_include": [
+          "Project name and T2 tier",
+          "Default A1 autonomy",
+          "@imports for PRD, architecture, design, rules and memory",
+          "Verified install/dev/test/lint/build commands",
+          "No-TypeScript rule",
+          "Security and correctness non-negotiables",
+          "Definition of done"
+        ]
+      },
+      {
+        "path": "docs/PRD.md",
+        "purpose": "Product requirements and bounded Round 2 scope.",
+        "must_include": [
+          "Problem",
+          "Users",
+          "Jobs to be done",
+          "Round 2 MVP workflow",
+          "Finding types",
+          "In scope",
+          "Out of scope",
+          "Success criteria",
+          "Performance and accessibility targets",
+          "Cost and usage budget fields clearly marked TBD if unknown",
+          "Security/privacy boundaries",
+          "Round 3 direction"
+        ]
+      },
+      {
+        "path": "docs/ARCHITECTURE.md",
+        "purpose": "System design and data flow.",
+        "must_include": [
+          "Single Cloudflare Worker architecture",
+          "Frontend/API request flow",
+          "FastAPI layers",
+          "Cloudflare bindings",
+          "D1 relational entities and relationships",
+          "Evidence-to-fact-to-claim-to-version-to-release dependency chain",
+          "AI versus deterministic responsibility",
+          "Release Passport integrity",
+          "Runtime caveat and proof gate",
+          "Local development"
+        ]
+      },
+      {
+        "path": "docs/DESIGN.md",
+        "purpose": "One authoritative design system for all application UI.",
+        "must_include": [
+          "Editorial B2B governance workspace direction",
+          "Deep navy, slate, near-white and teal palette",
+          "Amber stale/warning and red error semantics",
+          "Typography and spacing tokens",
+          "Navigation and application layout",
+          "Core components",
+          "Default/hover/focus/disabled/loading/empty/error/success states",
+          "WCAG 2.2 AA target",
+          "Responsive behavior",
+          "Reduced motion",
+          "Performance budget"
+        ]
+      },
+      {
+        "path": "RULES.md",
+        "purpose": "Non-negotiable implementation, security and collaboration rules.",
+        "must_include": [
+          "Priority order",
+          "JavaScript JSX only",
+          "Cloudflare architecture boundaries",
+          "AI untrusted/advisory",
+          "D1 prepared statements and workspace scoping",
+          "Immutable versions and passports",
+          "Safe upload restriction",
+          "Dependencies require ADR",
+          "Testing, review and documentation rules"
+        ]
+      },
+      {
+        "path": "TASKS.md",
+        "purpose": "Living work board.",
+        "must_include": [
+          "Only verified status values",
+          "Task IDs",
+          "Owner",
+          "Dependencies",
+          "Acceptance criteria",
+          "Separate Mritunjay/Rahul/Arvind workstreams",
+          "Integration tasks",
+          "Round 2 deadline if still current",
+          "Three meaningful Round 3 improvements"
+        ]
+      },
+      {
+        "path": "MEMORY.md",
+        "purpose": "Compact verified project state.",
+        "must_include": [
+          "Current phase",
+          "What is actually implemented and verified",
+          "Open blockers",
+          "Current architecture facts",
+          "Last verified commands/results",
+          "Next actions"
+        ],
+        "hard_rule": "Never store secrets, tokens, passwords, private customer content or speculative completion claims."
+      },
+      {
+        "path": "docs/DECISIONS.md",
+        "purpose": "Append-only Architecture Decision Records.",
+        "must_include": [
+          "ADR-001 React JavaScript/JSX, no TypeScript",
+          "ADR-002 Cloudflare as deployment platform",
+          "ADR-003 one Worker serving API and frontend assets",
+          "ADR-004 D1 relational model, no graph database",
+          "ADR-005 LLM advisory, deterministic checks authoritative",
+          "ADR-006 fictional demo data and constrained uploads",
+          "ADR-007 exclude 10k-websites cinematic pipeline",
+          "ADR-008 browser cannot access bindings directly"
+        ],
+        "hard_rule": "Append new decisions. Never delete or rewrite history. Supersede an old decision with a new ADR and explicit status."
+      }
+    ],
+    "supporting_documents": [
+      {
+        "path": "README.md",
+        "purpose": "Project overview, team, stack, setup, repository map, demo boundaries and honest status."
+      },
+      {
+        "path": "CONTRIBUTING.md",
+        "purpose": "Branching, task ownership, PR requirements, review and daily integration rhythm."
+      },
+      {
+        "path": "docs/API_CONTRACT.md",
+        "purpose": "Shared endpoint list, request/response JSON examples, error format, ownership and integration rules."
+      },
+      {
+        "path": "docs/TEST_PLAN.md",
+        "purpose": "Unit, repository, API, frontend and e2e tests; scenario matrix and measurable critical-path gates."
+      },
+      {
+        "path": "docs/EXECUTION_PLAN.md",
+        "purpose": "Bounded milestones from runtime proof to data foundation, claim analysis, UI modules, release integrity and final release."
+      },
+      {
+        "path": "docs/TEAM_HANDOFF.md",
+        "purpose": "Clear non-overlapping ownership, file scopes, branch names and first tasks."
+      },
+      {
+        "path": "docs/TOOLING_AUDIT.md",
+        "purpose": "Source interpretation, excluded skill workflow, current runtime verification and unresolved tool/package items."
+      },
+      {
+        "path": "docs/IMPLEMENTATION_PROMPT_TEMPLATE.md",
+        "purpose": "Template for future one-milestone-at-a-time Claude Code prompts."
+      },
+      {
+        "path": "FILE_INVENTORY.json",
+        "purpose": "Machine-readable inventory of files actually created."
+      },
+      {
+        "path": "STARTER_MANIFEST.json",
+        "purpose": "Starter version, stack decisions, generated scope and known unverified areas."
+      }
+    ],
+    "security_documents": [
+      {
+        "path": "brain/security/threat-model.md",
+        "purpose": "STRIDE-based threat model based on the actual architecture and trust boundaries."
+      },
+      {
+        "path": "brain/security/secrets.md",
+        "purpose": "Secret inventory, storage and rotation procedures. Never place secret values here."
+      },
+      {
+        "path": "brain/security/attack-surface.md",
+        "purpose": "Public routes, input classes, bindings, model boundary and Round 2 restrictions."
+      },
+      {
+        "path": "brain/security/security-checklist.md",
+        "purpose": "One canonical 40-control T2 checklist; every item starts NOT VERIFIED and requires evidence to change status."
+      },
+      {
+        "path": "brain/security/incident-runbook.md",
+        "purpose": "Who to notify, safe takedown, credential rotation and recovery steps."
+      }
+    ],
+    "deployment_documents": [
+      {
+        "path": "deployment/cloudflare.md",
+        "purpose": "Prerequisites, resource names/bindings, local commands, preview deployment, production deployment gate, cost/abuse controls and official references."
+      },
+      {
+        "path": "deployment/rollback.md",
+        "purpose": "Rollback triggers, rollback steps, database migration safety, recovery owner and test status."
+      }
+    ]
+  },
+  "initial_repository_structure": {
+    "required_paths": [
+      "CLAUDE.md",
+      "README.md",
+      "RULES.md",
+      "TASKS.md",
+      "MEMORY.md",
+      "CONTRIBUTING.md",
+      "package.json",
+      "pyproject.toml",
+      "uv.lock when generated",
+      "wrangler.jsonc",
+      ".gitignore",
+      ".gitattributes",
+      ".env.example",
+      ".dev.vars.example",
+      "frontend/index.html",
+      "frontend/package.json",
+      "frontend/vite.config.js",
+      "frontend/src/main.jsx",
+      "frontend/src/App.jsx",
+      "frontend/src/styles.css",
+      "frontend/src/services/api.js",
+      "frontend/src/components/ui/",
+      "frontend/src/components/content/",
+      "frontend/src/components/brand/",
+      "frontend/src/features/content-review/",
+      "frontend/src/features/brand-governance/",
+      "frontend/src/features/release-governance/",
+      "backend/src/worker.py",
+      "backend/src/app/main.py",
+      "backend/src/app/api/health.py",
+      "backend/src/app/core/",
+      "backend/src/app/domain/",
+      "backend/src/app/repositories/",
+      "backend/src/app/services/",
+      "backend/tests/",
+      "database/migrations/",
+      "docs/",
+      "brain/security/",
+      "deployment/",
+      ".github/pull_request_template.md"
+    ],
+    "structure_rules": [
+      "Use the existing starter structure if it already exists. Inspect before creating or overwriting anything.",
+      "Do not create a second nested BRANDCORE directory if the current directory is already the project root.",
+      "Use lowercase kebab-case for feature folders and clear conventional names for files.",
+      "Use .js and .jsx only in the frontend. Do not create TypeScript files or config.",
+      "Keep generated inventories accurate; do not list nonexistent files."
+    ]
+  },
+  "minimal_code_scaffold": {
+    "frontend": [
+      "Create a small React app shell with BRANDCORE name, navigation placeholder and honest API health status.",
+      "Use JavaScript JSX only.",
+      "Create a single shared API client in frontend/src/services/api.js. All API access must use relative /api paths.",
+      "Use Tailwind CSS and the token definitions from docs/DESIGN.md. Avoid large UI libraries and animation dependencies unless separately approved through an ADR.",
+      "Do not build feature screens beyond clear, labelled placeholder states for the three workstreams. Do not create fake live product functionality."
+    ],
+    "backend": [
+      "Create the minimal FastAPI app and /api/health endpoint.",
+      "Create the documented Python Worker entry point for the selected Cloudflare runtime using current official instructions.",
+      "Keep application layers and directories ready for later incremental implementation.",
+      "Add a health endpoint test. Do not implement claims, approval, passports or D1 repository logic in this bootstrap stage."
+    ],
+    "cloudflare_config": [
+      "Create wrangler.jsonc for one Worker serving frontend/dist as Workers Static Assets and routing /api/* to the Python Worker, using current official configuration names and syntax.",
+      "Declare planned D1, R2 and Workers AI bindings with explicit placeholder identifiers/names only.",
+      "Do not create Cloudflare resources, deploy, or insert account IDs, database IDs, tokens or secrets without explicit user permission.",
+      "Document local dev and combined deployment verification commands."
+    ],
+    "database": [
+      "Create the migrations folder and a README that explains the migration approach. Do not invent a production-ready full schema in this bootstrap if the D1 proof of concept is not yet verified.",
+      "Document the intended conceptual entities and relationships in docs/ARCHITECTURE.md.",
+      "Before schema implementation, add a migration plan and tests in a later bounded task."
+    ],
+    "dependencies": [
+      "Use only the smallest direct dependencies needed for the starter shell and health endpoint.",
+      "Verify current stable versions from official package registries or official documentation. Do not guess versions.",
+      "No unpinned @latest installs, no blind npx -y package execution and no new global tools.",
+      "Create or update a one-line ADR for each direct dependency group and explain why it is necessary.",
+      "Generate package-lock.json and uv.lock only after verifying dependency compatibility. If dependency installation or network access is unavailable, leave a clear blocker and do not fabricate lockfiles."
+    ]
+  },
+  "data_and_domain_rules": {
+    "conceptual_entities": [
+      "brand or demo workspace",
+      "approved fact and fact version",
+      "evidence record and evidence version",
+      "policy and policy version",
+      "content item and immutable content version",
+      "candidate claim",
+      "verification finding",
+      "claim-to-fact/evidence dependency",
+      "human review decision",
+      "immutable Release Passport",
+      "release status event",
+      "audit event"
+    ],
+    "dependency_chain": "Evidence Source → Approved Fact Version → Claim in Content → Content Version → Release Passport",
+    "release_passport_required_fields": [
+      "release ID",
+      "exact content SHA-256 hash",
+      "content version ID",
+      "policy version ID",
+      "approved fact/evidence versions used",
+      "finding IDs and dispositions",
+      "human approver ID or demo reviewer identity",
+      "decision timestamp",
+      "audit reference"
+    ],
+    "release_statuses": [
+      "VALID",
+      "STALE",
+      "REVOKED",
+      "INVALID"
+    ],
+    "immutability_rules": [
+      "Content submitted for review is immutable. Editing creates a new version.",
+      "Release Passport snapshots are immutable.",
+      "A changed fact/evidence version creates a new status event and stale impact record; it never rewrites the historical passport.",
+      "Revalidation creates a new review and, if approved, a new release record."
+    ],
+    "ai_and_rules_boundary": {
+      "ai_may": [
+        "extract candidate claims",
+        "classify language and qualifiers",
+        "identify semantic similarity candidates",
+        "explain a finding",
+        "suggest revised wording"
+      ],
+      "ai_may_not": [
+        "declare a claim factually true without approved evidence",
+        "create or approve facts",
+        "approve/reject/publish content",
+        "change release status directly",
+        "write to the database outside validated application services"
+      ],
+      "deterministic_engine_owns": [
+        "exact numeric comparisons",
+        "dates and expiry",
+        "terminology allow/deny rules",
+        "required qualifiers",
+        "scope constraints",
+        "content hashes",
+        "policy/evidence version IDs",
+        "dependency traversal",
+        "release state transitions"
+      ]
+    }
+  },
+  "design_system": {
+    "visual_direction": "Professional editorial B2B governance workspace. Calm, precise, evidence-first. Not a generic AI chat UI and not a cinematic marketing page.",
+    "tokens": {
+      "canvas": "#F5F7FA",
+      "surface": "#FFFFFF",
+      "surface_muted": "#EEF2F6",
+      "navy_950": "#142235",
+      "navy_800": "#203750",
+      "slate_700": "#42556B",
+      "slate_600": "#5C6D80",
+      "slate_500": "#718197",
+      "border": "#DCE3EA",
+      "teal_700": "#147A72",
+      "teal_100": "#DDF3EF",
+      "amber_700": "#986000",
+      "amber_100": "#FFF1CC",
+      "red_700": "#B42318",
+      "red_100": "#FEE4E2",
+      "green_700": "#137547",
+      "green_100": "#DDF5E7",
+      "text_primary": "#162638",
+      "text_secondary": "#5C6D80",
+      "focus_ring": "#2563EB"
+    },
+    "rules": [
+      "Check actual text/background contrast; token names do not guarantee WCAG AA.",
+      "Use system UI font stack initially, readable 14–16px body text and at least 12px metadata.",
+      "Base spacing unit is 4px. Desktop page padding 24px; tablet 16px; mobile 12–16px.",
+      "Every interactive component has default, hover, focus-visible, disabled, loading, empty, error and success states where applicable.",
+      "Every screen has loading, empty, error and success states.",
+      "Use textual labels as well as color for statuses.",
+      "Respect prefers-reduced-motion. No animation communicates a critical status change.",
+      "Do not add a generic compliance score. Keep findings and evidence visible."
+    ],
+    "performance_targets": {
+      "mobile_lcp": "<= 2.5s target",
+      "mobile_inp": "<= 200ms target",
+      "mobile_cls": "<= 0.1 target",
+      "initial_route_js": "<= 170 KB compressed target, or document an ADR if exceeded",
+      "measurement_rule": "Targets must be measured on the deployed build. Do not report them as achieved until measured."
+    }
+  },
+  "team_collaboration": {
+    "branch_model": {
+      "main": "Submission/release-ready branch; no direct feature work.",
+      "develop": "Integration branch.",
+      "feature_branches": [
+        "feature/mritunjay/core-api",
+        "feature/rahul/content-review",
+        "feature/arvind/brand-governance"
+      ]
+    },
+    "rules": [
+      "Each contributor starts from develop and works on their owned feature branch.",
+      "All work enters develop through a pull request and at least one teammate review.",
+      "No direct pushes to main, force pushes or secrets in commits.",
+      "Keep PRs small, preferably under 400 changed lines unless the change genuinely requires more.",
+      "PR must state what changed, files touched, tests run, results, mock data remaining and known gaps.",
+      "Update TASKS.md and MEMORY.md for meaningful changes.",
+      "API contract changes must be proposed by Mritunjay and communicated before frontend implementation depends on them.",
+      "Rahul and Arvind may use clearly labelled mock fixtures until endpoints are available, but must remove mocks from the core workflow during integration."
+    ],
+    "file_ownership": {
+      "Mritunjay": [
+        "backend/**",
+        "database/**",
+        "wrangler.jsonc",
+        "pyproject.toml",
+        "docs/ARCHITECTURE.md",
+        "docs/API_CONTRACT.md",
+        "deployment/**"
+      ],
+      "Rahul": [
+        "frontend/src/features/content-review/**",
+        "frontend/src/components/content/**",
+        "content-review tests"
+      ],
+      "Arvind": [
+        "frontend/src/features/brand-governance/**",
+        "frontend/src/features/release-governance/**",
+        "frontend/src/components/brand/**",
+        "brand/release UI tests"
+      ]
+    },
+    "shared_files": [
+      "Rahul coordinates frontend shell/global styles and shared UI primitives.",
+      "Mritunjay owns API contract and API client contract decisions.",
+      "All three follow docs/DESIGN.md; no separate palettes, component systems or API assumptions."
+    ]
+  },
+  "execution_phases": [
+    {
+      "id": "PHASE-0",
+      "name": "Repository and source inspection",
+      "actions": [
+        "Print the current working directory and inspect existing files, git status and package/config state.",
+        "Read the available source workflow, audit, ECC guide and 10k skill/reference files fully.",
+        "Inspect all existing project documents before creating or replacing files.",
+        "Identify conflicts, missing source files, unverified assumptions and any existing work to preserve.",
+        "Provide a short inventory and execution plan before making changes."
+      ],
+      "exit_criteria": [
+        "No existing project work is overwritten blindly.",
+        "Source availability and limitations are recorded.",
+        "Conflict resolutions match this JSON."
+      ]
+    },
+    {
+      "id": "PHASE-1",
+      "name": "Product specification and architecture documents",
+      "actions": [
+        "Create or minimally update docs/PRD.md.",
+        "Create or minimally update docs/ARCHITECTURE.md, including one readable Mermaid architecture diagram and the workflow/dependency chain.",
+        "Create append-only docs/DECISIONS.md with the required ADRs.",
+        "Define data flows and trust boundaries before writing the threat model."
+      ],
+      "exit_criteria": [
+        "Product scope and exclusions are explicit.",
+        "Architecture is conditional on the runtime POC and no unsupported integrations are claimed.",
+        "The diagram is simple and readable."
+      ]
+    },
+    {
+      "id": "PHASE-2",
+      "name": "T2 security and design foundations",
+      "actions": [
+        "Create threat-model.md after reviewing the architecture and trust boundaries.",
+        "Create secrets.md, attack-surface.md, the single 40-item security-checklist.md and incident-runbook.md.",
+        "Keep all security checklist entries NOT VERIFIED until evidence exists.",
+        "Create docs/DESIGN.md as the only application UI design authority."
+      ],
+      "exit_criteria": [
+        "Threat model maps to actual components and data flows.",
+        "No secret values are written anywhere.",
+        "Security controls have owners/evidence placeholders and are not falsely marked passed.",
+        "Design document covers responsive behavior, accessibility and state design."
+      ]
+    },
+    {
+      "id": "PHASE-3",
+      "name": "Team rules, tasks, contracts and documentation",
+      "actions": [
+        "Create RULES.md, TASKS.md and MEMORY.md.",
+        "Create docs/API_CONTRACT.md with initial endpoint map and request/response examples labelled proposed until implemented.",
+        "Create docs/TEST_PLAN.md with exact test scenarios and thresholds.",
+        "Create docs/EXECUTION_PLAN.md with bounded milestones and owners.",
+        "Create docs/TEAM_HANDOFF.md and CONTRIBUTING.md.",
+        "Create docs/TOOLING_AUDIT.md and docs/IMPLEMENTATION_PROMPT_TEMPLATE.md.",
+        "Create deployment/cloudflare.md and deployment/rollback.md.",
+        "Create CLAUDE.md at 150 lines maximum with @imports and accurate commands."
+      ],
+      "exit_criteria": [
+        "Tasks have owner, status, dependencies and acceptance criteria.",
+        "Frontend responsibilities are distinct.",
+        "CLAUDE.md is a short entry point and not a duplicate of the other documents.",
+        "Decision history remains append-only."
+      ]
+    },
+    {
+      "id": "PHASE-4",
+      "name": "Minimal starter code and configuration",
+      "actions": [
+        "Create the React JavaScript/JSX Vite shell and minimal API client.",
+        "Create the FastAPI app and /api/health endpoint with a test.",
+        "Create Python Worker entry point and Wrangler configuration using current official Cloudflare guidance.",
+        "Create placeholder D1, R2 and Workers AI binding names without account-specific IDs or secrets.",
+        "Create safe .env.example and .dev.vars.example with names and placeholders only.",
+        "Create database/migrations/README.md that documents the planned migration approach without pretending a production schema is complete.",
+        "Create .gitignore, .gitattributes and PR template."
+      ],
+      "exit_criteria": [
+        "No TypeScript files exist.",
+        "The frontend shell and backend health endpoint are minimal and honest.",
+        "No feature workflow is falsely marked implemented.",
+        "Wrangler configuration is checked against current official documentation."
+      ]
+    },
+    {
+      "id": "PHASE-5",
+      "name": "Validation and handoff",
+      "actions": [
+        "Validate all JSON and JSONC files with an appropriate parser or syntax check.",
+        "Validate pyproject.toml and Python syntax.",
+        "Run available frontend build/lint/test scripts only if dependencies are installed and versions verified.",
+        "Run pytest for the health endpoint if dependencies are available.",
+        "Search the repository for TypeScript extensions/configuration and remove accidental additions.",
+        "Search the repository for inconsistent product naming and ensure BRANDCORE is the only product name.",
+        "Search for secrets, unsafe placeholders, broken relative links, incorrect paths and TODOs with no owner.",
+        "Regenerate FILE_INVENTORY.json and STARTER_MANIFEST.json from actual files.",
+        "Update MEMORY.md and TASKS.md with actual verification results.",
+        "Do not deploy, create remote resources, commit, push or add paid services without explicit permission."
+      ],
+      "exit_criteria": [
+        "All achievable local checks pass or are listed as blocked with exact reason.",
+        "File inventory matches the actual tree.",
+        "Handoff guide gives each teammate a safe first task.",
+        "No claimed test/deploy result lacks evidence."
+      ]
+    }
+  ],
+  "quality_and_security_gates": {
+    "engineering": [
+      "Per task: inspect sources → plan in at most five steps → write/update a failing test for behavior → implement the smallest slice → run checks → review diff → update TASKS and MEMORY.",
+      "Default A1 autonomy. Do not use unattended multi-task autonomous build loops.",
+      "One canonical skill owner per engineering concern. ECC is on-demand and should not duplicate the workflow owner.",
+      "No new dependency without a concise ADR covering necessity, compatibility, version, license, size and known vulnerabilities.",
+      "Stable docs change by minimal evidence-based diff. DECISIONS is append-only. TASKS and MEMORY are living documents."
+    ],
+    "testing": [
+      "All tests that exist for changed behavior must pass.",
+      "Aim for at least 80 percent line coverage on critical data/auth/write paths once implemented.",
+      "Add unit tests for deterministic comparisons and release-state transitions in later implementation phases.",
+      "Include API, repository, frontend and end-to-end test layers in docs/TEST_PLAN.md.",
+      "Never claim browser, deployment, security or performance checks passed if they were not run."
+    ],
+    "security": [
+      "T2 controls apply because the intended product involves multiple roles, evidence uploads, approval records and AI analysis.",
+      "For this public hackathon demo, use fictional seed data only and clearly document that production use is not approved.",
+      "Enforce brand/workspace scope in every repository query and mutation. Never trust client-supplied role, approval status or protected IDs.",
+      "Retrieved files, user-submitted content and model outputs are untrusted. Design against prompt injection and unsafe HTML rendering.",
+      "Validate all request data with Pydantic and explicit length/size limits.",
+      "Keep private R2 objects private. Use authorized backend access only.",
+      "Do not expose debug traces, private content or secrets in client errors/logs.",
+      "Use explicit CSP/security headers, least-privilege bindings and separate preview/production configuration when those environments exist.",
+      "Do not implement production authentication casually. If production auth is introduced, stop and create a separately reviewed security task with tests.",
+      "Never commit .env, .dev.vars, tokens, API keys, real documents or real personal/customer data."
+    ],
+    "accessibility_and_ux": [
+      "Target WCAG 2.2 AA.",
+      "Every interactive action is keyboard accessible with visible focus.",
+      "Every screen includes loading, empty, error and success states.",
+      "Findings explain what is wrong and why; color is never the only signal.",
+      "Respect reduced-motion preferences and avoid unnecessary animation."
+    ]
+  },
+  "git_and_remote_safety": {
+    "allowed": [
+      "Inspect git status, branches, diffs and local files.",
+      "Create local project files and tests.",
+      "Create a local git repository only if one does not exist and the user has asked for local repository setup."
+    ],
+    "requires_explicit_user_approval": [
+      "Creating a GitHub remote repository.",
+      "Adding GitHub collaborators or changing repository visibility/permissions.",
+      "Pushing branches or tags.",
+      "Cloudflare login, resource creation or deployment.",
+      "Changing secrets or environment variables.",
+      "Destructive database migrations or data deletion.",
+      "Installing paid services or consuming paid AI credits.",
+      "Adding a new external dependency that is not already part of the approved stack."
+    ],
+    "forbidden": [
+      "Force push.",
+      "Commit secrets or real private data.",
+      "Run blind git pull or execute unreviewed remote scripts.",
+      "Use unpinned @latest packages or unreviewed npx -y installers.",
+      "Overwrite unrelated existing files or discard uncommitted user work."
+    ]
+  },
+  "acceptance_criteria": [
+    "Exactly eight core project documents exist at the paths specified.",
+    "All supporting, security and deployment documents exist and cross-reference correct paths.",
+    "CLAUDE.md is 150 lines or fewer and imports the core source documents rather than duplicating them.",
+    "The product name is BRANDCORE throughout. No separate product/module brand name is introduced.",
+    "No TypeScript files, tsconfig.json or TypeScript dependencies/configuration are present.",
+    "Frontend is React with JavaScript JSX, Vite and Tailwind CSS.",
+    "Backend is Python 3.13+ FastAPI intended for Cloudflare Python Workers, conditional on the proof-of-concept gate.",
+    "Cloudflare D1, R2 and Workers AI are represented as backend-only bindings; the browser has no direct binding access.",
+    "No PostgreSQL, Neo4j, Hostinger, Higgsfield or FFmpeg marketing-site pipeline is added.",
+    "The eight core documents, API contract, tasks, team handoff and implementation prompt template agree with one another.",
+    "Rahul's content-review scope and Arvind's brand-operations/release-governance scope are distinct.",
+    "All security checklist controls start NOT VERIFIED unless test evidence exists.",
+    "The minimal frontend and API health shell do not pretend to implement the full product.",
+    "No real secrets, credentials, customer data or private documents are created or committed.",
+    "JSON/TOML/Python syntax and available local checks are validated, with blocked checks reported honestly.",
+    "FILE_INVENTORY.json and STARTER_MANIFEST.json match the resulting repository."
+  ],
+  "final_report_format": {
+    "sections": [
+      "Repository inspected",
+      "Source files read and unavailable sources",
+      "Files created",
+      "Files updated and why",
+      "Files intentionally left unchanged",
+      "Eight-document checklist",
+      "Scaffold components created",
+      "Commands/tests run with exact results",
+      "Cloudflare proof-of-concept status",
+      "Security checklist status",
+      "Outstanding blockers and decisions requiring Mritunjay's approval",
+      "Suggested next bounded prompt"
+    ],
+    "truthfulness_rule": "Distinguish configured, locally tested, remotely deployed and production-ready. These are different statuses. Do not use the words working, complete, secure or deployed without evidence."
+  }
+}

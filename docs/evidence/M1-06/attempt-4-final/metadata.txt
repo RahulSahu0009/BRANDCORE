@@ -1,0 +1,87 @@
+M1-06 Workers AI — Final authorized attempt (attempt 4)
+========================================================
+
+Date:          2026-11-04 (local)
+Authorization: M1-06 FINAL INFERENCE AUTHORIZATION: APPROVED
+               All 9 local tests passed before inference.
+
+Model:         @cf/meta/llama-3.1-8b-instruct-fp8
+Binding:       env.AI, "remote": true (wrangler.jsonc)
+Endpoint:      POST http://127.0.0.1:8792/api/poc/ai
+Worker:        .venv\Scripts\pywrangler.exe dev --port 8792 --log-level debug
+
+Schema version at time of request
+----------------------------------
+src/app/api/poc.py — AiClaimExtraction (post schema-fix approval):
+  claim_text:     str
+  claim_type:     str | None = None
+  numeric_value:  str | int | float | None = None
+  unit:           str | None = None
+  qualifier:      str | None = None
+  scope:          str | None = None
+  numeric_value_str: property → str | None (normalizer)
+
+Synthetic input (unchanged from all prior attempts)
+----------------------------------------------------
+System: You are a precise JSON extractor. Output only valid JSON.
+User:   Extract the marketing claim below into JSON with exactly these keys:
+        claim_text, claim_type, numeric_value, unit, qualifier, scope.
+        Use null for missing fields. Return only the JSON object, no explanation.
+
+        Claim: Our platform reduces customer onboarding time by up to 40 percent.
+
+max_tokens: 256. No temperature or other sampling parameter overrides.
+
+HTTP result
+-----------
+Status:   HTTP/1.1 200 OK
+Duration: 4.262446 s (curl)
+Body:     671 bytes, application/json
+
+Inference outcome
+-----------------
+- Inference: SUCCESS — model returned a response.
+- Raw response captured: YES (before Pydantic construction).
+- Raw response text (model output):
+    ```json
+    {
+      "claim_text": "Our platform reduces customer onboarding time by up to 40 percent.",
+      "claim_type": null,
+      "numeric_value": 40,
+      "unit": "percent",
+      "qualifier": "up to",
+      "scope": null
+    }
+    ```
+- Markdown code fence: present — stripped correctly by existing cleaner.
+
+Pydantic validation
+-------------------
+Result:        PASS (pydantic_valid: true)
+claim_text:    "Our platform reduces customer onboarding time by up to 40 percent."
+claim_type:    null  → accepted (str | None = None)
+numeric_value: 40    → accepted (str | int | float | None = None)
+unit:          "percent"
+qualifier:     "up to"
+scope:         null  → accepted
+
+Numeric normalization
+---------------------
+numeric_value raw:        40  (int)
+numeric_value_str:        "40"
+Normalizer working:       YES
+
+Token usage (captured before Pydantic construction)
+----------------------------------------------------
+prompt_tokens:      86
+completion_tokens:  64
+total_tokens:       150
+cached_tokens:      0
+neurons:            2.8571334797888994
+
+Final result: PASS_REMOTE. M1-06 VERIFIED.
+
+Artifacts in this directory:
+- response.headers.txt
+- response.body.txt
+- metadata.txt (this file)

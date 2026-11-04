@@ -1,0 +1,11 @@
+{
+  "name": "brandcore",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BRANDCORE — Evidence-linked, explainable and change-aware brand governance.",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "lint:frontend": "cd frontend && npm run lint"
+  }
+}

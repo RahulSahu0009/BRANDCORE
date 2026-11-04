@@ -1,0 +1,128 @@
+X [ERROR] Exception in ASGI application after response started
+
+X [ERROR] Traceback (most recent call last):
+
+X [ERROR]   File "/session/metadata/python_modules/workers/asgi.py", line 313, in run_app
+
+X [ERROR]     await app(request_to_scope(req, env, state=state), receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/applications.py", line 1194, in __call__
+
+X [ERROR]     await super().__call__(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/applications.py", line 96, in __call__
+
+X [ERROR]     await self.middleware_stack(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/middleware/errors.py", line 186, in __call__
+
+X [ERROR]     raise exc
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/middleware/errors.py", line 164, in __call__
+
+X [ERROR]     await self.app(scope, receive, _send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/telemetry/_asgi.py", line 151, in __call__
+
+X [ERROR]     await self.app(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/middleware/cors.py", line 91, in __call__
+
+X [ERROR]     await self.simple_response(scope, receive, send, request_headers=headers)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/middleware/cors.py", line 149, in simple_response
+
+X [ERROR]     await self.app(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/middleware/exceptions.py", line 63, in __call__
+
+X [ERROR]     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/_exception_handler.py", line 53, in wrapped_app
+
+X [ERROR]     raise exc
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/_exception_handler.py", line 42, in wrapped_app
+
+X [ERROR]     await app(scope, receive, sender)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+
+X [ERROR]     await self.app(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/routing.py", line 683, in __call__
+
+X [ERROR]     await self.middleware_stack(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 2811, in app
+
+X [ERROR]     await route.handle(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 1839, in handle
+
+X [ERROR]     await self.original_router.handle(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 2894, in handle
+
+X [ERROR]     await included_router._handle_selected(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 1865, in _handle_selected
+
+X [ERROR]     await original_route.handle(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 1328, in handle
+
+X [ERROR]     await effective_context.app(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 166, in app
+
+X [ERROR]     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/_exception_handler.py", line 53, in wrapped_app
+
+X [ERROR]     raise exc
+
+X [ERROR]   File "/session/metadata/python_modules/starlette/_exception_handler.py", line 42, in wrapped_app
+
+X [ERROR]     await app(scope, receive, sender)
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 152, in app
+
+X [ERROR]     response = await f(request)
+
+X [ERROR]                ^^^^^^^^^^^^^^^^
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 745, in app
+
+X [ERROR]     raw_response = await run_endpoint_function(
+
+X [ERROR]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+X [ERROR]     ...<3 lines>...
+
+X [ERROR]     )
+
+X [ERROR]     ^
+
+X [ERROR]   File "/session/metadata/python_modules/fastapi/routing.py", line 372, in run_endpoint_function
+
+X [ERROR]     return await dependant.call(**values)
+
+X [ERROR]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+X [ERROR]   File "/session/metadata/app/api/poc.py", line 122, in poc_ai
+
+X [ERROR]     extraction = AiClaimExtraction(**parsed)
+
+X [ERROR]   File "/session/metadata/python_modules/pydantic/main.py", line 280, in __init__
+
+X [ERROR]     validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+
+X [ERROR] pydantic_core._pydantic_core.ValidationError: 1 validation error for AiClaimExtraction
+
+X [ERROR] numeric_value
+
+X [ERROR]   Input should be a valid string [type=string_type, input_value=40, input_type=int]
+
+X [ERROR]     For further information visit https://errors.pydantic.dev/2.14/v/string_type
+

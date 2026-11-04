@@ -1,0 +1,15 @@
+# BRANDCORE — Cloudflare Worker local dev secrets
+# Copy this file to .dev.vars and fill in real values for local development.
+# .dev.vars is in .gitignore — NEVER commit it.
+# Used by: pywrangler dev (without --env flag)
+#
+# IMPORTANT: .dev.vars overrides wrangler.jsonc vars in `pywrangler dev`.
+# The top-level wrangler.jsonc vars.BRANDCORE_ENV is "disabled" (fails closed).
+# Set BRANDCORE_ENV=development here to enable POC routes in local dev.
+# Alternatively, run: pywrangler dev --env=development
+
+BRANDCORE_ENV=development
+
+# Add further secret variable names here as they are needed.
+# Example (do not use real values):
+# SOME_API_KEY=<your-api-key-here>
