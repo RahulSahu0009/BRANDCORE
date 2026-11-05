@@ -172,7 +172,7 @@ export default function ReleaseGovernancePage() {
           </Card>
           <Card padding="p-4" className="border-red-700/20 bg-red-50/30 dark:bg-red-900/20">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Revoked</div>
-            <div className="text-2xl font-bold text-red-700">{summary.revoked}</div>
+            <div className="text-2xl font-bold text-red-700 dark:text-red-400">{summary.revoked}</div>
           </Card>
         </div>
 

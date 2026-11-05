@@ -276,7 +276,7 @@ export default function ContentReviewPage() {
                             <span className="text-xs font-medium text-text-primary">{version.title}</span>
                             <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
                               version.review_status === 'APPROVED' ? 'bg-green-100 text-green-700' :
-                              version.review_status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                              version.review_status === 'REJECTED' ? 'bg-red-100 text-red-700 dark:text-red-400' :
                               'bg-surface-muted text-slate-500'
                             }`}>
                               {version.review_status}
@@ -409,7 +409,7 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
                 } flex items-center justify-center text-white text-xs`}>
                   {criticalCount + highCount > 0 ? '!' : '✓'}
                 </span>
-                <CardTitle className={criticalCount > 0 ? 'text-red-700' : 'text-green-700'}>
+                <CardTitle className={criticalCount > 0 ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}>
                   {criticalCount > 0 ? `${criticalCount} critical finding${criticalCount > 1 ? 's' : ''}` : 'No critical findings'}
                 </CardTitle>
               </div>
@@ -422,7 +422,7 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Critical</p>
-                  <p className="text-xl font-bold text-red-700">{criticalCount}</p>
+                  <p className="text-xl font-bold text-red-700 dark:text-red-400">{criticalCount}</p>
                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">High</p>
@@ -459,7 +459,7 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-xs font-semibold text-text-primary truncate">{config.label}</span>
                                 <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                                  config.severity === 'critical' ? 'bg-red-100 text-red-700' :
+                                  config.severity === 'critical' ? 'bg-red-100 text-red-700 dark:text-red-400' :
                                   config.severity === 'high' ? 'bg-amber-100 text-amber-700' :
                                   'bg-surface-muted text-slate-500'
                                 }`}>

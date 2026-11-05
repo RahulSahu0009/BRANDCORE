@@ -206,7 +206,7 @@ export default function ApprovedFactsPage() {
           </Card>
           <Card padding="p-4">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Without evidence</div>
-            <div className="text-2xl font-bold text-red-700">{factSummary.withoutEvidence}</div>
+            <div className="text-2xl font-bold text-red-700 dark:text-red-400">{factSummary.withoutEvidence}</div>
           </Card>
         </div>
 
@@ -284,7 +284,7 @@ export default function ApprovedFactsPage() {
                         <span className="text-xs text-slate-500 block mt-0.5">{fact.scope.region}</span>
                       )}
                       {fact.scope?.valid_until && (
-                        <span className="text-xs text-red-600 block mt-0.5">Expires {formatDate(fact.scope.valid_until)}</span>
+                        <span className="text-xs text-red-600 dark:text-red-400 block mt-0.5">Expires {formatDate(fact.scope.valid_until)}</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -458,7 +458,7 @@ function FactFormDialog({ fact, onSave, onClose, demoMode, workspaceId }) {
                   </FormSelect>
                 </FormField>
               </div>
-              {errors.scope && <p className="text-xs text-red-700 mt-1">{errors.scope}</p>}
+              {errors.scope && <p className="text-xs text-red-700 dark:text-red-400 mt-1">{errors.scope}</p>}
             </div>
           </div>
 

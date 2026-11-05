@@ -11,7 +11,7 @@ export function TopBar({ workspace, backendStatus, onSidebarToggle, isSidebarOpe
 
   return (
     <header
-      className="sticky top-0 z-30 bg-surface/90 backdrop-blur backdrop-blur-md border-b border-border"
+      className="sticky top-0 z-50 bg-surface/95 backdrop-blur backdrop-blur-md border-b border-border"
     >
       <div className="flex items-center justify-between px-6 py-3">
         <div className="flex items-center gap-4">

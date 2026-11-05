@@ -2,27 +2,20 @@
  * BRANDCORE — FormField
  * Label, input, error message container with proper accessibility association.
  */
-import { useState } from 'react'
 
 export function FormField({ label, name, error, required, children, helperText, className = '' }) {
-  const [isFocused, setIsFocused] = useState(false)
-
   return (
     <div className={'mb-4 ' + className}>
       <label
         htmlFor={name}
         className="block text-sm font-medium text-text-primary mb-1"
       >
-        {label} {required && <span className="text-red-700 ml-1">*</span>}
+        {label} {required && <span className="text-red-700 dark:text-red-400 ml-1">*</span>}
       </label>
-      <div
-        className="relative"
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-      >
+      <div className="relative">
         {children}
         {error && (
-          <p className="mt-1 text-xs text-red-700" role="alert">
+          <p className="mt-1 text-xs text-red-700 dark:text-red-400" role="alert">
             {error}
           </p>
         )}

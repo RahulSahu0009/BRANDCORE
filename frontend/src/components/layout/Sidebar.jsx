@@ -5,12 +5,11 @@
  * Desktop:
  * - Expanded: full width with icons + text labels
  * - Collapsed: compact icon-only sidebar with tooltips
- * - Collapse preference persisted in localStorage
+ * - Collapse preference persisted in localStorage (via AppShell)
  *
  * Mobile:
- * - Overlay drawer with backdrop
- * - Escape-to-close, backdrop click to close
- * - Body scroll locked when open
+ * - Hidden; overlay drawer controlled by AppShell
+ * - Escape-to-close, backdrop click to close, body scroll lock
  */
 import { useState, useEffect, useCallback } from 'react'
 import { useWorkspace } from '@/context/WorkspaceContext'
@@ -25,37 +24,21 @@ const NAV_ITEMS = [
   { id: 'evidence', label: 'Evidence Library', icon: 'E' },
 ]
 
-const COLLAPSE_STORAGE_KEY = 'brandcore-sidebar-collapsed'
-
-function getInitialCollapsed() {
-  if (typeof window === 'undefined') return false
-  const saved = localStorage.getItem(COLLAPSE_STORAGE_KEY)
-  return saved === 'true'
-}
-
-export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed }) {
-  const { workspaceName, authStatus } = useWorkspace()
-  const [isOpen, setIsOpen] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(getInitialCollapsed())
+export function Sidebar({ activeItem, onItemClick, isCollapsed, onCollapseChange, isOpen, onClose }) {
+  const { workspaceName } = useWorkspace()
   const [mounted, setMounted] = useState(false)
 
-  // Persist collapse preference after mount (avoid hydration flash)
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem(COLLAPSE_STORAGE_KEY, String(isCollapsed))
-    }
-  }, [isCollapsed, mounted])
-
   const handleToggleCollapse = useCallback(() => {
-    setIsCollapsed((prev) => !prev)
-  }, [])
+    onCollapseChange((prev) => !prev)
+  }, [onCollapseChange])
 
-  const handleOpenMobile = useCallback(() => setIsOpen(true), [])
-  const handleCloseMobile = useCallback(() => setIsOpen(false), [])
+  const handleCloseMobile = useCallback(() => {
+    onClose?.()
+  }, [onClose])
 
   // Close mobile drawer on escape
   useEffect(() => {
@@ -78,13 +61,12 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
     'transform',
   ].join(' ')
 
-  const contentOffset = isCollapsed ? 'pl-20' : 'pl-64'
-
   return (
     <>
-      {/* Desktop sidebar (always present, collapsible) */}
+      {/* Desktop sidebar (fixed, always present on md+) */}
       <aside
         className={['hidden md:flex', sidebarClasses].join(' ')}
+        id="brandcore-sidebar"
         aria-label="Main navigation"
       >
         <div className="flex-1 overflow-y-auto">
@@ -96,7 +78,6 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
                   key={item.id}
                   onClick={() => {
                     onItemClick(item.id)
-                    if (isOpen) handleCloseMobile()
                   }}
                   aria-current={isActive ? 'page' : undefined}
                   aria-label={isCollapsed ? item.label : undefined}
@@ -129,6 +110,7 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
             onClick={handleToggleCollapse}
             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-controls="brandcore-sidebar"
+            aria-expanded={!isCollapsed}
             className="w-full flex items-center justify-center px-2 py-2 rounded-md text-text-secondary hover:bg-surface-muted hover:text-text-primary focus-ring transition-colors"
           >
             <svg
@@ -143,7 +125,12 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
                 ? <line x1="18" y1="12" x2="6" y2="12" />
                 : <line x1="6" y1="12" x2="18" y2="12" />}
             </svg>
-            {!isCollapsed && <span className="ml-2 text-xs text-text-secondary">Collapse</span>}
+            {!isCollapsed && (
+              <span className="ml-2 text-xs text-text-secondary">Collapse</span>
+            )}
+            {isCollapsed && (
+              <span className="ml-2 text-xs text-text-secondary">Expand</span>
+            )}
           </button>
         </div>
       </aside>
@@ -152,13 +139,13 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
             onClick={handleCloseMobile}
             aria-hidden="true"
           />
           <aside
             id="brandcore-sidebar-mobile"
-            className="fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border flex flex-col md:hidden transform transition-transform duration-300 ease-in-out"
+            className="fixed inset-y-0 left-0 z-50 w-64 bg-surface border-r border-border flex flex-col md:hidden transform transition-transform duration-300 ease-in-out"
             aria-label="Main navigation"
           >
             <div className="flex-1 overflow-y-auto">
@@ -217,20 +204,6 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
             </div>
           </aside>
         </>
-      )}
-
-      {/* Desktop collapse toggle button (shown only when sidebar is collapsed) */}
-      {!mounted || !isCollapsed ? null : (
-        <button
-          onClick={handleToggleCollapse}
-          aria-label="Expand sidebar"
-          aria-controls="brandcore-sidebar"
-          className="fixed left-0 top-24 z-20 w-10 h-10 rounded-r-md bg-surface border border-r-0 border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary focus-ring transition-colors md:hidden"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-            <line x1="18" y1="12" x2="6" y2="12" />
-          </svg>
-        </button>
       )}
     </>
   )

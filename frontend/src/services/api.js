@@ -39,7 +39,11 @@ export function onAuthError(callback) {
 
 async function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' }
-  const token = await getToken({ template: 'brandcore-api' })
+  let token = await getToken({ template: 'brandcore-api' })
+  // Fallback to default token if template-specific token is unavailable
+  if (!token) {
+    token = await getToken()
+  }
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }

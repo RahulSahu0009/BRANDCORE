@@ -1,9 +1,11 @@
 # BRANDCORE — Design System
 
-**Version:** 0.2.0 · **Authority:** This is the single source of truth for all BRANDCORE application UI.
+**Version:** 0.3.0 · **Authority:** This is the single source of truth for all BRANDCORE application UI.
 **Direction:** Refined editorial SaaS + forest-green identity + intelligent data presentation.
 Professional editorial B2B governance workspace. Calm, precise, evidence-first.
 Not a generic AI chat UI and not a cinematic marketing page.
+
+**Design seed:** Forest-green editorial enterprise (recorded as ADR-010). Single canonical source — all UI work references only this document.
 
 ---
 
@@ -278,7 +280,18 @@ Sidebar collapsed width: 80px (icon only, tooltips on hover).
 
 ---
 
-## 12. Authentication UI States
+## 12. Motion Rules
+
+- All transitions and animations use `ease-out` or `ease-in-out` timing
+- Sidebar collapse/expand: `duration-300 ease-in-out` on width and transform
+- Mobile drawer slide: `duration-300 ease-in-out` on transform
+- Fade-in for page content: `duration-200 ease-out`
+- No animated backgrounds, marquee text, or decorative motion
+- **`prefers-reduced-motion: reduce`:** All animations and transitions are reduced to 0.01ms duration (see `src/styles.css`)
+
+---
+
+## 13. Authentication UI States
 
 | Auth state | UI behavior |
 |------------|-------------|
@@ -294,7 +307,7 @@ Demo mode (backend endpoints unavailable but auth valid): Clearly labeled amber 
 
 ---
 
-## 13. API Loading and Error States
+## 14. API Loading and Error States
 
 | API result | UI behavior |
 |------------|-------------|
@@ -311,7 +324,7 @@ Prevent duplicate requests caused by repeated component renders. Do not hide bac
 
 ---
 
-## 14. Performance Budget
+## 15. Performance Budget
 
 | Metric | Target | Status |
 |--------|--------|--------|
@@ -324,7 +337,7 @@ Measure on the deployed build. If the JS budget is exceeded, document an ADR wit
 
 ---
 
-## 15. What Not to Do
+## 16. What Not to Do
 
 - No generic compliance score widget
 - No elaborate onboarding animations
@@ -338,7 +351,7 @@ Measure on the deployed build. If the JS budget is exceeded, document an ADR wit
 
 ---
 
-## 16. Component Ownership
+## 17. Component Ownership
 
 - **Shared design system:** All components in `src/components/ui/` and `src/components/layout/`
 - **Sidebar and application shell:** Shared, used by all pages
