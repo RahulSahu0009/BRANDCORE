@@ -3,10 +3,12 @@
  * Release passport list with status badges, stale impact explanations,
  * and detailed passport views showing approval history and dependencies.
  *
- * Demo mode: When backend endpoints are unavailable, displays clearly labeled
- * demo fixtures. No data is faked as live backend data.
+ * Demo mode: When backend endpoints are unavailable but auth is valid, displays
+ * clearly labeled demo fixtures. Auth failures (401/403) are never silently
+ * replaced with demo data.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { useWorkspace } from '@/context/WorkspaceContext'
 import { api } from '@/services/api'
 import {
   Card, CardHeader, CardTitle, CardBody, CardFooter,
@@ -14,9 +16,7 @@ import {
   FormField, FormInput, FormSelect,
 } from '@/components/ui'
 import { PageHeader } from '@/components/layout'
-import { DEMO_RELEASES, DEMO_STALE_IMPACT, DEMO_WORKSPACE } from '../brand-governance/__mocks__/demo-data'
-
-const WORKSPACE_ID = 'ws_demo'
+import { DEMO_RELEASES, DEMO_STALE_IMPACT } from '../brand-governance/__mocks__/demo-data'
 
 function formatDate(isoString) {
   if (!isoString) return '—'
@@ -34,6 +34,7 @@ function formatDateTime(isoString) {
 }
 
 export default function ReleaseGovernancePage() {
+  const { workspaceId, authStatus } = useWorkspace()
   const [releases, setReleases] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -42,20 +43,35 @@ export default function ReleaseGovernancePage() {
   const [statusFilter, setStatusFilter] = useState('all')
 
   const fetchReleases = useCallback(async () => {
+    if (!workspaceId || authStatus !== 'ready') {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
-      const data = await api.getReleases(WORKSPACE_ID)
+      const data = await api.getReleases(workspaceId)
       setReleases(data.releases || [])
       setDemoMode(false)
     } catch (err) {
-      setDemoMode(true)
-      setReleases(DEMO_RELEASES)
-      setError(null)
+      if (err.status === 401 || err.status === 403) {
+        setError(err.status === 401
+          ? 'Session expired. Please sign in again.'
+          : 'You do not have access to this workspace.')
+        setDemoMode(false)
+      } else if (err.status === 404) {
+        setError('Workspace not found.')
+        setDemoMode(false)
+      } else {
+        setDemoMode(true)
+        setReleases(DEMO_RELEASES)
+        setError(null)
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [workspaceId, authStatus])
 
   useEffect(() => {
     fetchReleases()
@@ -102,6 +118,15 @@ export default function ReleaseGovernancePage() {
     )
   }
 
+  if (authStatus !== 'ready' && !demoMode) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Release Governance" description="Monitor release passports, track stale status after fact changes, and manage revalidation workflows." />
+        <ErrorState message={error || 'Unable to load releases'} onRetry={fetchReleases} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -111,7 +136,7 @@ export default function ReleaseGovernancePage() {
       />
 
       {demoMode && (
-        <Card padding="p-4" className="border-amber-700/20 bg-amber-50">
+        <Card padding="p-4" className="border-amber-700/20 bg-amber-50 dark:bg-amber-900/20">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 rounded bg-amber-700 flex items-center justify-center text-white text-xs">
               !
@@ -137,15 +162,15 @@ export default function ReleaseGovernancePage() {
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Total releases</div>
             <div className="text-2xl font-bold text-text-primary">{summary.total}</div>
           </Card>
-          <Card padding="p-4" className="border-green-700/20 bg-green-50/30">
+          <Card padding="p-4" className="border-green-700/20 bg-green-50/30 dark:bg-green-900/20">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Valid</div>
             <div className="text-2xl font-bold text-green-700">{summary.valid}</div>
           </Card>
-          <Card padding="p-4" className="border-amber-700/20 bg-amber-50/30">
+          <Card padding="p-4" className="border-amber-700/20 bg-amber-50/30 dark:bg-amber-900/20">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Stale</div>
             <div className="text-2xl font-bold text-amber-700">{summary.stale}</div>
           </Card>
-          <Card padding="p-4" className="border-red-700/20 bg-red-50/30">
+          <Card padding="p-4" className="border-red-700/20 bg-red-50/30 dark:bg-red-900/20">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Revoked</div>
             <div className="text-2xl font-bold text-red-700">{summary.revoked}</div>
           </Card>
@@ -235,7 +260,6 @@ export default function ReleaseGovernancePage() {
         </div>
         </>
       )}
-
       {selectedRelease && (
         <ReleasePassportDrawer
           release={selectedRelease}
@@ -252,11 +276,6 @@ function searchPlaceholder(filter) {
   return labels[filter] || 'Try adjusting your filters.'
 }
 
-/**
- * Release Passport Drawer — Detailed view of a release passport
- * with approval summary, version details, supporting facts, evidence,
- * policy snapshot, and stale impact information.
- */
 function ReleasePassportDrawer({ release, onClose, demoMode }) {
   return (
     <div
@@ -280,7 +299,6 @@ function ReleasePassportDrawer({ release, onClose, demoMode }) {
         </div>
 
         <div className="space-y-6">
-          {/* Approval Summary */}
           <Card>
             <CardHeader>
               <CardTitle>Approval Summary</CardTitle>
@@ -307,9 +325,8 @@ function ReleasePassportDrawer({ release, onClose, demoMode }) {
             </CardBody>
           </Card>
 
-          {/* Stale Impact Panel (only for STALE releases) */}
           {release.status === 'STALE' && (
-            <Card className="border-amber-700/30 bg-amber-50/30">
+            <Card className="border-amber-700/30 bg-amber-50/30 dark:bg-amber-900/20">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-700" />
@@ -355,7 +372,6 @@ function ReleasePassportDrawer({ release, onClose, demoMode }) {
             </Card>
           )}
 
-          {/* Version Details */}
           <Card>
             <CardHeader>
               <CardTitle>Version Details</CardTitle>

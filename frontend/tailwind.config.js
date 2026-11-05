@@ -11,42 +11,41 @@ export default {
         // Canvas and surfaces
         canvas: {
           DEFAULT: '#F5F7FA',
-          dark: '#0B1018',
+          dark: '#0A0F17',
         },
         surface: {
           DEFAULT: '#FFFFFF',
-          dark: '#131A24',
+          dark: '#111827',
         },
         'surface-muted': {
-          DEFAULT: '#EEF2F6',
-          dark: '#1C2532',
+          DEFAULT: '#F1F5F9',
+          dark: '#1E293B',
         },
         'surface-elevated': {
           DEFAULT: '#FFFFFF',
-          dark: '#1C2532',
+          dark: '#1F2937',
         },
-        // Navy (primary text and headings)
-        navy: {
+        // Brand text (navy in light, neutral in dark)
+        brand: {
           950: '#142235',
-          800: '#203750',
-          dark: '#E8EEF5',
+          dark: '#F8FAFC',
         },
         // Slate (secondary text and borders)
         slate: {
           700: '#42556B',
           600: '#5C6D80',
           500: '#718197',
-          dark: '#9FB0C4',
+          dark: '#94A3B8',
         },
         border: {
           DEFAULT: '#DCE3EA',
-          dark: '#2A3442',
+          dark: '#334155',
         },
-        // Teal (primary action, success, approved)
-        teal: {
-          700: '#147A72',
-          100: '#DDF3EF',
-          dark: '#3FBFA9',
+        // Forest green (primary action, success, approved)
+        green: {
+          700: '#15803d',
+          100: '#DCFCE7',
+          dark: '#34D399',
         },
         // Amber (stale, warning)
         amber: {
@@ -60,19 +59,13 @@ export default {
           100: '#FEE4E2',
           dark: '#E87A6E',
         },
-        // Green (valid, approved)
-        green: {
-          700: '#137547',
-          100: '#DDF5E7',
-          dark: '#3FBFA9',
-        },
         // Text
         'text-primary': '#162638',
-        'text-primary-dark': '#F5F7FA',
+        'text-primary-dark': '#F8FAFC',
         'text-secondary': '#5C6D80',
-        'text-secondary-dark': '#9FB0C4',
-        // Focus
-        focus: '#2563EB',
+        'text-secondary-dark': '#94A3B8',
+        // Focus ring
+        focus: '#15803d',
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],

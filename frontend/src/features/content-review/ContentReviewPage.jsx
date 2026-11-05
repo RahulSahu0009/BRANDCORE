@@ -3,10 +3,12 @@
  * Content submission, analysis findings display, and review decision workflow.
  * Distinguishes AI-extracted claims from deterministic verification results.
  *
- * Demo mode: When backend endpoints are unavailable, displays clearly labeled
- * demo fixtures. No data is faked as live backend data.
+ * Demo mode: When backend endpoints are unavailable but auth is valid, displays
+ * clearly labeled demo fixtures. Auth failures (401/403) are never silently
+ * replaced with demo data.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { useWorkspace } from '@/context/WorkspaceContext'
 import { api } from '@/services/api'
 import {
   Card, CardHeader, CardTitle, CardBody, CardFooter,
@@ -14,9 +16,7 @@ import {
   FormField, FormInput, FormTextarea,
 } from '@/components/ui'
 import { PageHeader } from '@/components/layout'
-import { DEMO_CONTENT_VERSIONS, DEMO_FINDINGS, DEMO_WORKSPACE } from '../brand-governance/__mocks__/demo-data'
-
-const WORKSPACE_ID = 'ws_demo'
+import { DEMO_CONTENT_VERSIONS, DEMO_FINDINGS } from '../brand-governance/__mocks__/demo-data'
 
 const FINDING_TYPE_CONFIG = {
   UNSUPPORTED_CLAIM: { label: 'Unsupported claim', color: 'red', severity: 'critical' },
@@ -28,6 +28,8 @@ const FINDING_TYPE_CONFIG = {
   UNAPPROVED_TERMINOLOGY: { label: 'Unapproved terminology', color: 'amber', severity: 'medium' },
 }
 
+const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
+
 function formatDate(isoString) {
   if (!isoString) return '—'
   return new Date(isoString).toLocaleDateString('en-US', {
@@ -36,6 +38,7 @@ function formatDate(isoString) {
 }
 
 export default function ContentReviewPage() {
+  const { workspaceId, authStatus } = useWorkspace()
   const [contentVersions, setContentVersions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -45,20 +48,35 @@ export default function ContentReviewPage() {
   const [formData, setFormData] = useState({ title: '', body_text: '' })
 
   const fetchContentVersions = useCallback(async () => {
+    if (!workspaceId || authStatus !== 'ready') {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
-      const data = await api.getContentVersions(WORKSPACE_ID, 'ci_demo')
+      const data = await api.getContentVersions(workspaceId, 'ci_demo')
       setContentVersions(data.versions || [])
       setDemoMode(false)
     } catch (err) {
-      setDemoMode(true)
-      setContentVersions(DEMO_CONTENT_VERSIONS)
-      setError(null)
+      if (err.status === 401 || err.status === 403) {
+        setError(err.status === 401
+          ? 'Session expired. Please sign in again.'
+          : 'You do not have access to this workspace.')
+        setDemoMode(false)
+      } else if (err.status === 404) {
+        setError('Content versions not found for this workspace.')
+        setDemoMode(false)
+      } else {
+        setDemoMode(true)
+        setContentVersions(DEMO_CONTENT_VERSIONS)
+        setError(null)
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [workspaceId, authStatus])
 
   useEffect(() => {
     fetchContentVersions()
@@ -66,9 +84,11 @@ export default function ContentReviewPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!workspaceId) return
+
     setSubmitting(true)
     try {
-      const result = await api.submitContent(WORKSPACE_ID, {
+      const result = await api.submitContent(workspaceId, {
         title: formData.title,
         body_text: formData.body_text,
       })
@@ -82,26 +102,30 @@ export default function ContentReviewPage() {
       }, ...contentVersions])
       setFormData({ title: '', body_text: '' })
     } catch (err) {
-      setDemoMode(true)
-      // In demo mode, simulate a successful submission with mock data
-      const mockId = 'cv_demo_' + Date.now()
-      setContentVersions([{
-        id: mockId,
-        version_number: contentVersions.length + 1,
-        sha256_hash: 'mock_' + mockId,
-        created_at: new Date().toISOString(),
-        review_status: 'PENDING',
-        title: formData.title,
-      }, ...contentVersions])
-      setFormData({ title: '', body_text: '' })
+      if (err.status === 401 || err.status === 403) {
+        setError(err.status === 401
+          ? 'Session expired. Please sign in again.'
+          : 'You do not have access to this workspace.')
+        setDemoMode(false)
+      } else {
+        setDemoMode(true)
+        const mockId = 'cv_demo_' + Date.now()
+        setContentVersions([{
+          id: mockId,
+          version_number: contentVersions.length + 1,
+          sha256_hash: 'mock_' + mockId,
+          created_at: new Date().toISOString(),
+          review_status: 'PENDING',
+          title: formData.title,
+        }, ...contentVersions])
+        setFormData({ title: '', body_text: '' })
+      }
     } finally {
       setSubmitting(false)
     }
   }
 
   const handleAnalyze = (versionId) => {
-    // Analysis endpoint is implemented (M3-05)
-    // In demo mode, show demo findings
     setDemoMode(true)
     setSelectedVersion({
       id: versionId,
@@ -110,12 +134,9 @@ export default function ContentReviewPage() {
   }
 
   const handleReviewDecision = (decision) => {
-    // Review decision endpoint not yet implemented
     setDemoMode(true)
     setSelectedVersion(null)
   }
-
-  const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
 
   if (loading) {
     return (
@@ -139,6 +160,15 @@ export default function ContentReviewPage() {
     )
   }
 
+  if (authStatus !== 'ready' && !demoMode) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Content Review" description="Submit content for review, examine AI-extracted claims and verification findings, and record review decisions." />
+        <ErrorState message={error || 'Unable to load content versions'} onRetry={fetchContentVersions} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -153,7 +183,7 @@ export default function ContentReviewPage() {
       />
 
       {demoMode && (
-        <Card padding="p-4" className="border-amber-700/20 bg-amber-50">
+        <Card padding="p-4" className="border-amber-700/20 bg-amber-50 dark:bg-amber-900/20">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 rounded bg-amber-700 flex items-center justify-center text-white text-xs">
               !
@@ -174,7 +204,6 @@ export default function ContentReviewPage() {
 
       {!error && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Content Submission Form */}
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
@@ -215,7 +244,6 @@ export default function ContentReviewPage() {
             </Card>
           </div>
 
-          {/* Content Versions List */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
@@ -269,7 +297,6 @@ export default function ContentReviewPage() {
           </div>
         </div>
       )}
-
       {selectedVersion === 'submit' && (
         <ContentSubmissionDialog
           onSubmit={handleSubmit}
@@ -279,7 +306,6 @@ export default function ContentReviewPage() {
           onFormChange={setFormData}
         />
       )}
-
       {selectedVersion && selectedVersion !== 'submit' && (
         <AnalysisResultsDialog
           version={selectedVersion}
@@ -292,9 +318,6 @@ export default function ContentReviewPage() {
   )
 }
 
-/**
- * Content Submission Dialog — Form for submitting new content items.
- */
 function ContentSubmissionDialog({ onSubmit, onClose, submitting, formData, onFormChange }) {
   return (
     <div
@@ -343,10 +366,6 @@ function ContentSubmissionDialog({ onSubmit, onClose, submitting, formData, onFo
   )
 }
 
-/**
- * Analysis Results Dialog — Shows extracted claims, verification findings,
- * severity presentation, and review decision UI.
- */
 function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode }) {
   const [reviewDecision, setReviewDecision] = useState(null)
   const [reviewNotes, setReviewNotes] = useState('')
@@ -382,7 +401,6 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
         </div>
 
         <div className="space-y-6">
-          {/* Findings Summary */}
           <Card className="border-t-2 border-red-700/30">
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -414,7 +432,6 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
             </CardBody>
           </Card>
 
-          {/* Findings List */}
           <Card>
             <CardHeader>
               <CardTitle>Verification Findings</CardTitle>
@@ -451,7 +468,7 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
                               </div>
                               <p className="text-sm text-text-primary mb-1">{finding.reason}</p>
                               {finding.suggestion && (
-                                <div className="bg-green-50 rounded p-2 text-xs text-green-700 border border-green-100">
+                                <div className="bg-green-50 dark:bg-green-900/20 rounded p-2 text-xs text-green-700 dark:text-green-400 border border-green-100 dark:border-green-800/30">
                                   <span className="font-semibold text-xs uppercase tracking-wider">Suggested correction:</span>{' '}
                                   {finding.suggestion}
                                 </div>
@@ -471,7 +488,6 @@ function AnalysisResultsDialog({ version, onClose, onReviewDecision, demoMode })
             </CardBody>
           </Card>
 
-          {/* Review Decision */}
           {findings.length > 0 && (
             <Card>
               <CardHeader>

@@ -19,7 +19,7 @@ export function Breadcrumbs({ items }) {
               <>
                 <a
                   href={item.href}
-                  className="hover:text-teal-700 dark:hover:text-teal-dark transition-colors"
+                  className="hover:text-green-700 dark:hover:text-green-400 transition-colors"
                 >
                   {item.label}
                 </a>

@@ -3,20 +3,20 @@
  * First-class evidence management interface showing sources, types, validity,
  * linked facts, and freshness status.
  *
- * Demo mode: When backend endpoints are unavailable, displays clearly labeled
- * demo fixtures. No data is faked as live backend data.
+ * Demo mode: When backend endpoints are unavailable but auth is valid, displays
+ * clearly labeled demo fixtures. Auth failures (401/403) are never silently
+ * replaced with demo data.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { useWorkspace } from '@/context/WorkspaceContext'
 import { api } from '@/services/api'
 import {
   Card, CardHeader, CardTitle, CardBody,
   Button, StatusBadge, EmptyState, ErrorState, Skeleton, SkeletonRow,
-  FormField, FormInput,
+  FormField, FormInput, FormSelect,
 } from '@/components/ui'
 import { PageHeader } from '@/components/layout'
 import { DEMO_EVIDENCE, DEMO_WORKSPACE } from './__mocks__/demo-data'
-
-const WORKSPACE_ID = 'ws_demo'
 
 const SOURCE_TYPE_LABELS = {
   internal_study: 'Internal Study',
@@ -34,6 +34,7 @@ function formatDate(isoString) {
 }
 
 export default function EvidenceLibraryPage() {
+  const { workspaceId, authStatus } = useWorkspace()
   const [evidence, setEvidence] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -42,22 +43,36 @@ export default function EvidenceLibraryPage() {
   const [typeFilter, setTypeFilter] = useState('all')
 
   const fetchEvidence = useCallback(async () => {
+    if (!workspaceId || authStatus !== 'ready') {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
       // Evidence listing endpoint not yet implemented — will fall back to demo
-      const data = await api.getWorkspace(WORKSPACE_ID)
-      // If we get here, workspace endpoint works but evidence doesn't exist yet
+      const data = await api.getWorkspace(workspaceId)
       setDemoMode(true)
       setEvidence(DEMO_EVIDENCE)
     } catch (err) {
-      setDemoMode(true)
-      setEvidence(DEMO_EVIDENCE)
-      setError(null)
+      if (err.status === 401 || err.status === 403) {
+        setError(err.status === 401
+          ? 'Session expired. Please sign in again.'
+          : 'You do not have access to this workspace.')
+        setDemoMode(false)
+      } else if (err.status === 404) {
+        setError('Workspace not found.')
+        setDemoMode(false)
+      } else {
+        setDemoMode(true)
+        setEvidence(DEMO_EVIDENCE)
+        setError(null)
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [workspaceId, authStatus])
 
   useEffect(() => {
     fetchEvidence()
@@ -100,6 +115,15 @@ export default function EvidenceLibraryPage() {
     )
   }
 
+  if (authStatus !== 'ready' && !demoMode) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Evidence Library" description="Manage evidence sources that support approved brand facts. Each evidence record links to one or more approved facts." />
+        <ErrorState message={error || 'Unable to load evidence library'} onRetry={fetchEvidence} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -109,7 +133,7 @@ export default function EvidenceLibraryPage() {
       />
 
       {demoMode && (
-        <Card padding="p-4" className="border-amber-700/20 bg-amber-50">
+        <Card padding="p-4" className="border-amber-700/20 bg-amber-50 dark:bg-amber-900/20">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 rounded bg-amber-700 flex items-center justify-center text-white text-xs">
               !
@@ -141,7 +165,7 @@ export default function EvidenceLibraryPage() {
           </Card>
           <Card padding="p-4">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Linked to facts</div>
-            <div className="text-2xl font-bold text-teal-700">{summary.linked}</div>
+            <div className="text-2xl font-bold text-green-700">{summary.linked}</div>
           </Card>
           <Card padding="p-4">
             <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Unlinked</div>

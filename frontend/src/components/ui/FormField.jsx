@@ -17,8 +17,8 @@ export function FormField({ label, name, error, required, children, helperText, 
       </label>
       <div
         className="relative"
-        onFocusIn={() => setIsFocused(true)}
-        onFocusOut={() => setIsFocused(false)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       >
         {children}
         {error && (

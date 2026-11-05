@@ -3,10 +3,12 @@
  * Brand governance workspace for managing approved facts with scope, qualifier,
  * evidence relationships, and validity information.
  *
- * Demo mode: When backend endpoints are unavailable, displays clearly labeled
- * demo fixtures. No data is faked as live backend data.
+ * Demo mode: When backend endpoints are unavailable but auth is valid, displays
+ * clearly labeled demo fixtures. Auth failures (401/403) are never silently
+ * replaced with demo data.
  */
 import { useState, useEffect, useCallback } from 'react'
+import { useWorkspace } from '@/context/WorkspaceContext'
 import { api } from '@/services/api'
 import {
   Card, CardHeader, CardTitle, CardBody, CardFooter,
@@ -16,8 +18,6 @@ import {
 import { PageHeader } from '@/components/layout'
 import { DEMO_FACTS, DEMO_WORKSPACE } from './__mocks__/demo-data'
 
-const WORKSPACE_ID = 'ws_demo'
-
 function formatDate(isoString) {
   if (!isoString) return '—'
   return new Date(isoString).toLocaleDateString('en-US', {
@@ -26,6 +26,7 @@ function formatDate(isoString) {
 }
 
 export default function ApprovedFactsPage() {
+  const { workspaceId, authStatus } = useWorkspace()
   const [facts, setFacts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -36,21 +37,36 @@ export default function ApprovedFactsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
 
   const fetchFacts = useCallback(async () => {
+    if (!workspaceId || authStatus !== 'ready') {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
-      const data = await api.getFacts(WORKSPACE_ID)
+      const data = await api.getFacts(workspaceId)
       setFacts(data.facts || [])
       setDemoMode(false)
     } catch (err) {
-      // Backend endpoint not implemented — fall back to clearly labeled demo data
-      setDemoMode(true)
-      setFacts(DEMO_FACTS)
-      setError(null)
+      if (err.status === 401 || err.status === 403) {
+        setError(err.status === 401
+          ? 'Session expired. Please sign in again.'
+          : 'You do not have access to this workspace.')
+        setDemoMode(false)
+      } else if (err.status === 404) {
+        setError('Workspace not found.')
+        setDemoMode(false)
+      } else {
+        // Backend endpoint not yet implemented — fall back to clearly labeled demo data
+        setDemoMode(true)
+        setFacts(DEMO_FACTS)
+        setError(null)
+      }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [workspaceId, authStatus])
 
   useEffect(() => {
     fetchFacts()
@@ -78,18 +94,25 @@ export default function ApprovedFactsPage() {
   }
 
   const handleSaveFact = async (factData) => {
+    if (!workspaceId) return
+
     try {
       if (editingFact) {
-        // PUT endpoint not yet implemented — demo mode only
         setDemoMode(true)
       } else {
-        const result = await api.createFact(WORKSPACE_ID, factData)
+        const result = await api.createFact(workspaceId, factData)
         setFacts([result, ...facts])
       }
       handleCloseForm()
       fetchFacts()
     } catch (err) {
-      setDemoMode(true)
+      if (err.status === 401 || err.status === 403) {
+        setError(err.status === 401
+          ? 'Session expired. Please sign in again.'
+          : 'You do not have access to this workspace.')
+      } else {
+        setDemoMode(true)
+      }
       handleCloseForm()
       fetchFacts()
     }
@@ -124,6 +147,15 @@ export default function ApprovedFactsPage() {
     )
   }
 
+  if (authStatus !== 'ready' && !demoMode) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Approved Facts" description="Manage approved brand facts with scope, qualifier, and evidence references." />
+        <ErrorState message={error || 'Unable to load facts'} onRetry={fetchFacts} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -138,7 +170,7 @@ export default function ApprovedFactsPage() {
       />
 
       {demoMode && (
-        <Card padding="p-4" className="border-amber-700/20 bg-amber-50">
+        <Card padding="p-4" className="border-amber-700/20 bg-amber-50 dark:bg-amber-900/20">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 rounded bg-amber-700 flex items-center justify-center text-white text-xs">
               !
@@ -153,7 +185,7 @@ export default function ApprovedFactsPage() {
         </Card>
       )}
 
-      {error && !demoMode && (
+      {!demoMode && error && (
         <ErrorState message="Unable to load approved facts" onRetry={fetchFacts} />
       )}
 
@@ -259,7 +291,7 @@ export default function ApprovedFactsPage() {
                       {fact.evidence_count ? (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-muted text-xs text-text-secondary">
                           #{fact.evidence_id?.slice(-3) || '—'}
-                          <span className="w-1.5 h-1.5 rounded-full bg-teal-700" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-700" />
                         </span>
                       ) : (
                         <span className="text-xs text-slate-400">None</span>
@@ -284,24 +316,20 @@ export default function ApprovedFactsPage() {
         </div>
         </>
       )}
-
       {openForm && (
         <FactFormDialog
           fact={editingFact}
           onSave={handleSaveFact}
           onClose={handleCloseForm}
           demoMode={demoMode}
+          workspaceId={workspaceId}
         />
       )}
     </div>
   )
 }
 
-/**
- * Fact Form Dialog — Create or edit an approved fact.
- * Logical field grouping with clear labels, help text, and validation.
- */
-function FactFormDialog({ fact, onSave, onClose, demoMode }) {
+function FactFormDialog({ fact, onSave, onClose, demoMode, workspaceId }) {
   const [formData, setFormData] = useState({
     text: fact?.text || '',
     qualifier: fact?.qualifier || '',

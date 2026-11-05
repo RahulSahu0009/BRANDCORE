@@ -22,6 +22,11 @@
   * {
     @apply border-border;
   }
+
+  /* Ensure theme class is applied before paint to prevent flash */
+  html.dark {
+    color-scheme: dark;
+  }
 }
 
 @layer components {
