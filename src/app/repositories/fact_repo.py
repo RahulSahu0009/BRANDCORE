@@ -69,15 +69,16 @@ class ApprovedFactRepository(BaseRepository):
             return None
         # Versioning: create a new row, preserve/supersede the old head.
         new_id = f"{fact_id}-v{current['version'] + 1}"
+        created = now_utc()
         await self._run(
             """
             INSERT INTO approved_fact
                 (id, workspace_id, claim_text, numeric_value, unit, qualifier,
                  scope, version, status, previous_version_id, created_by, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, 'brand_admin', ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, 'brand_admin', ?)
             """,
             (new_id, workspace_id, data.claim_text, data.numeric_value, data.unit,
-             data.qualifier, data.scope, current["version"] + 1, current["id"]),
+             data.qualifier, data.scope, current["version"] + 1, current["id"], created),
         )
         # Retire the previous head version.
         await self._run(
@@ -100,3 +101,10 @@ class ApprovedFactRepository(BaseRepository):
             (fact_id, workspace_id, evidence_id, workspace_id, now_utc(),
              fact_id, evidence_id),
         )
+
+    async def get_evidence_id(self, fact_id: str, workspace_id: str) -> str | None:
+        row = await self._first(
+            "SELECT evidence_id FROM fact_evidence WHERE fact_id = ? AND fact_workspace = ?",
+            (fact_id, workspace_id),
+        )
+        return row["evidence_id"] if row else None

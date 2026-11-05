@@ -12,6 +12,9 @@
 | Health endpoint | `backend/tests/test_health.py` | 3 | Pass |
 | AI schema validation | `backend/tests/test_ai_schema.py` | 6 | Pass |
 | POC route guard | `backend/tests/test_poc_guard.py` | 11 | Pass |
+| Clerk JWT verification | `backend/tests/test_auth_clerk.py` | 15 | Pass |
+| Workspace authorization | `backend/tests/test_workspace_auth.py` | 20 | Pass |
+| API protection | `backend/tests/test_api_protection.py` | 9 | Pass |
 | M2-02 schema/constraints | `backend/tests/test_m2_02_schema.py` | 24 | Pass |
 | M2-03 schema/constraints | `backend/tests/test_m2_03_schema.py` | 25 | Pass |
 | M2-04 seed | `backend/tests/test_m2_04_seed.py` | 5 | Pass |
@@ -22,7 +25,7 @@
 | M3-02 to M3-04 verification engine | `backend/tests/services/test_verification_engine.py` | 25 | Pass |
 | M3-05 analysis service | `backend/tests/services/test_analysis_service.py` | 7 | Pass |
 | Forensic regression (new) | `backend/tests/test_forensic_regression.py` | 18 | Pass |
-| **Total** | | **148** | **All pass** |
+| **Total** | | **192** | **All pass** |
 
 ---
 
@@ -30,7 +33,7 @@
 
 | Finding ID | Test(s) | Type | Coverage |
 |------------|---------|------|----------|
-| F-00 (No auth) | None | N/A | Documented as blocker |
+| F-00 (No auth) | `test_auth_clerk.py` (15), `test_workspace_auth.py` (20), `test_api_protection.py` (9) | Regression + Security | Clerk RS256 JWT verification, workspace org→D1 mapping, route protection |
 | F-01 (Stale detection stub) | `test_f01_find_stale_releases_detects_fact_change`, `test_f01_find_stale_releases_matches_detailed` | Regression | Stale detection actually works |
 | F-02 (Strength substring) | `test_f02_strength_word_boundary_all_does_not_match_already`, `test_f02_strength_word_boundary_all_matches_standalone_all` | Regression | Word-boundary strength matching |
 | F-03 (Qualifier substring) | `test_f03_qualifier_word_boundary_up_to_not_in_update`, `test_f03_qualifier_word_boundary_up_to_present_not_flagged` | Regression | Word-boundary qualifier matching |
@@ -63,7 +66,6 @@
 
 | Gap | Impact | Recommendation |
 |-----|--------|----------------|
-| No authentication/authorization tests | Cannot test what doesn't exist | Add when auth is implemented |
 | No HTTP-level analyze endpoint tests | Requires DB fixture in TestClient | Add when test DB fixture is available |
 | No static analysis | No tools installed | Add `ruff`/`flake8` as dev dependency |
 | No load/stress tests | Manual performance only | Add bounded concurrency tests |

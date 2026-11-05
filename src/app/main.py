@@ -3,21 +3,69 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.health import router as health_router
 from .api.poc import router as poc_router
 from .api.analyze import router as analyze_router
+from .api.workspaces import router as workspaces_router
+from .api.facts import router as facts_router
+from .api.evidence import router as evidence_router
+from .api.content import router as content_router
+from .api.review import router as review_router
+from .api.releases import router as releases_router
 from .api.dependencies import require_development_env
+from .auth.dependencies import require_workspace_access, require_workspace_permission
 
 app = FastAPI(title="BRANDCORE API", version="0.1.0", docs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_methods=["GET", "POST", "PATCH"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 app.include_router(health_router, prefix="/api")
 
-# Product analysis endpoint (workspace-scoped, no development-only guard).
-app.include_router(analyze_router, prefix="/api")
+# Product routes — all require Clerk authentication + workspace authorization.
+# Workspace list/provision endpoints handled separately (no workspace_id path param).
+_workspace_deps = [Depends(require_workspace_access("workspace_id"))]
+
+# Workspace routes: list and provision don't require existing mapping.
+app.include_router(
+    workspaces_router,
+    prefix="/api",
+)
+app.include_router(
+    facts_router,
+    prefix="/api",
+    dependencies=_workspace_deps,
+)
+app.include_router(
+    evidence_router,
+    prefix="/api",
+    dependencies=_workspace_deps,
+)
+app.include_router(
+    content_router,
+    prefix="/api",
+    dependencies=_workspace_deps,
+)
+
+# Review write endpoint requires admin permission; read endpoint requires workspace access.
+app.include_router(
+    review_router,
+    prefix="/api",
+    dependencies=_workspace_deps,
+)
+
+app.include_router(
+    analyze_router,
+    prefix="/api",
+    dependencies=_workspace_deps,
+)
+
+app.include_router(
+    releases_router,
+    prefix="/api",
+    dependencies=_workspace_deps,
+)
 
 # POC routes are guarded by require_development_env.
 app.include_router(
