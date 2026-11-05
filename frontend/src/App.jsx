@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { api } from './services/api.js'
+import ApprovedFacts from './features/brand-governance/ApprovedFacts.jsx'
+import ReleasePassports from './features/release-governance/ReleasePassports.jsx'
 
 const NAV_ITEMS = [
   { id: 'facts', label: 'Approved Facts', owner: 'Arvind' },
@@ -10,12 +12,15 @@ const NAV_ITEMS = [
 function StatusBadge({ status }) {
   const styles = {
     ok: 'bg-[#DDF5E7] text-[#137547]',
-    error: 'bg-[#FEE4E2] text-[#B42318]',
+    error: 'bg-[#EEF2F6] text-[#5C6D80]',
     loading: 'bg-[#EEF2F6] text-[#5C6D80]',
   }
-  const labels = { ok: 'API OK', error: 'API Error', loading: 'Checking…' }
+  const labels = { ok: 'API OK', error: 'Backend offline', loading: 'Checking…' }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles[status]}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles[status]}`}
+      title={status === 'error' ? 'Backend not running — frontend uses mock data' : undefined}
+    >
       {labels[status]}
     </span>
   )
@@ -60,6 +65,7 @@ export default function App() {
             <button
               key={item.id}
               onClick={() => setActiveNav(item.id)}
+              aria-current={activeNav === item.id ? 'page' : undefined}
               className={`w-full text-left px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-[#2563EB] ${
                 activeNav === item.id
                   ? 'bg-[#DDF3EF] text-[#147A72] font-medium'
@@ -72,9 +78,15 @@ export default function App() {
         </nav>
 
         {/* Main content */}
-        <main className="flex-1 p-6">
-          <h1 className="text-xl font-bold text-[#162638] mb-4">{active.label}</h1>
-          <Placeholder title={active.label} owner={active.owner} />
+        <main className="flex-1 p-6 min-w-0">
+          {activeNav === 'facts' && <ApprovedFacts />}
+          {activeNav === 'releases' && <ReleasePassports />}
+          {activeNav !== 'facts' && activeNav !== 'releases' && (
+            <>
+              <h1 className="text-xl font-bold text-[#162638] mb-4">{active.label}</h1>
+              <Placeholder title={active.label} owner={active.owner} />
+            </>
+          )}
         </main>
       </div>
     </div>
