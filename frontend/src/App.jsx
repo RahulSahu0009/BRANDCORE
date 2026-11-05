@@ -12,10 +12,13 @@ import { Button } from './components/ui/Button'
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext'
 import ApprovedFactsPage from './features/brand-governance/ApprovedFactsPage'
 import EvidenceLibraryPage from './features/brand-governance/EvidenceLibraryPage'
+import OverviewPage from './features/brand-governance/OverviewPage'
 import ReleaseGovernancePage from './features/release-governance/ReleaseGovernancePage'
 import ContentReviewPage from './features/content-review/ContentReviewPage'
+import { WorkspaceOnboarding } from './components/WorkspaceOnboarding'
 
 const PAGES = [
+  { id: 'overview', label: 'Overview', owner: 'Shared' },
   { id: 'facts', label: 'Approved Facts', owner: 'Arvind' },
   { id: 'content', label: 'Content Review', owner: 'Rahul' },
   { id: 'releases', label: 'Releases', owner: 'Arvind' },
@@ -23,32 +26,64 @@ const PAGES = [
 ]
 
 const PAGE_COMPONENTS = {
+  overview: OverviewPage,
   facts: ApprovedFactsPage,
   content: ContentReviewPage,
   releases: ReleaseGovernancePage,
   evidence: EvidenceLibraryPage,
 }
 
+// Health check interval: 30 seconds
+const HEALTH_INTERVAL_MS = 30000
+
 function AppWithAuth() {
   const { isSignedIn, isLoaded } = useAuth()
   const clerk = useClerk()
   const { orgId, workspaceId, workspaceName } = useWorkspace()
-  const [activePage, setActivePage] = useState('content')
-  const [healthStatus, setHealthStatus] = useState('loading')
-  const [backendStatus, setBackendStatus] = useState('connecting')
+  const [activePage, setActivePage] = useState('overview')
+  const [backendStatus, setBackendStatus] = useState('checking')
 
+  // Periodic health checking — separate from auth status
   useEffect(() => {
-    api.health()
-      .then(() => setHealthStatus('ok'))
-      .catch(() => setHealthStatus('error'))
-  }, [])
+    let cancelled = false
+    let timer
 
-  useEffect(() => {
+    async function checkHealth() {
+      if (cancelled) return
+      try {
+        await api.health()
+        if (!cancelled) setBackendStatus('connected')
+      } catch (err) {
+        if (cancelled) return
+        // 401/403 are auth errors, not backend offline
+        if (err.status === 401 || err.status === 403) {
+          setBackendStatus('connected')
+        } else {
+          setBackendStatus('offline')
+        }
+      }
+    }
+
+    checkHealth()
+    timer = setInterval(checkHealth, HEALTH_INTERVAL_MS)
+
     const unsubscribe = onBackendStatusChange((status) => {
-      setBackendStatus(status)
+      // Only update from API request listeners if not auth-related
+      if (status === 'connecting' && backendStatus !== 'offline') {
+        setBackendStatus('checking')
+      } else if (status === 'connected') {
+        setBackendStatus('connected')
+      } else if (status === 'offline') {
+        setBackendStatus('offline')
+      }
     })
-    return unsubscribe
-  }, [])
+
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+      unsubscribe()
+    }
+  }, [backendStatus])
 
   // Not loaded yet — show loading shell
   if (!isLoaded) {
@@ -106,20 +141,15 @@ function AppWithAuth() {
     )
   }
 
-  // Signed in but no workspace mapped — show access denied
+  // Signed in but no workspace mapped — show workspace onboarding
   if (!workspaceId) {
     return (
       <AppShell
-        workspace={{ id: '', name: 'No workspace access' }}
+        workspace={{ id: '', name: 'Workspace Setup' }}
         backendStatus={backendStatus}
         header={{ activeItem: activePage, onNavChange: setActivePage }}
       >
-        <div className="flex flex-col items-center justify-center h-64 text-slate-500">
-          <p className="mb-4 text-text-primary">No workspace access</p>
-          <p className="text-sm text-slate-500">
-            Your organization is not mapped to any BRANDCORE workspace.
-          </p>
-        </div>
+        <WorkspaceOnboarding orgId={orgId} />
       </AppShell>
     )
   }

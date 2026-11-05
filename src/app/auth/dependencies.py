@@ -120,19 +120,13 @@ def require_workspace_access(workspace_id_param: str = "workspace_id"):
         if db is None:
             raise HTTPException(status_code=500, detail="Database unavailable")
 
-        # Get workspace_id from path parameters
+        # Get workspace_id from path parameters (may be None for list endpoint)
         path_params = request.path_params or {}
         workspace_id = path_params.get(workspace_id_param)
-        if not workspace_id:
-            raise HTTPException(status_code=400, detail="Missing workspace_id")
 
         mapping_repo = WorkspaceOrgMappingRepository(db)
 
-        # Workspace must exist
-        if not await mapping_repo.workspace_exists(workspace_id):
-            raise HTTPException(status_code=404, detail="Workspace not found")
-
-        # Organization must be mapped to this workspace
+        # Organization must be mapped to at least one workspace
         mapped_workspace_id = await mapping_repo.get_workspace_id_by_org_id(
             clerk_user.org_id
         )
@@ -142,11 +136,15 @@ def require_workspace_access(workspace_id_param: str = "workspace_id"):
                 detail="Organization is not mapped to any workspace",
             )
 
-        if mapped_workspace_id != workspace_id:
-            raise HTTPException(
-                status_code=403,
-                detail="Organization does not have access to this workspace",
-            )
+        # If a specific workspace_id is provided, verify access to it
+        if workspace_id:
+            if not await mapping_repo.workspace_exists(workspace_id):
+                raise HTTPException(status_code=404, detail="Workspace not found")
+            if mapped_workspace_id != workspace_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Organization does not have access to this workspace",
+                )
 
         return clerk_user
 

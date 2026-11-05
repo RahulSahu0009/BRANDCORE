@@ -263,7 +263,7 @@ export default function ApprovedFactsPage() {
                 </tr>
               ) : (
                 filteredFacts.map((fact) => (
-                  <tr key={fact.id} className="bg-surface hover:bg-surface-muted transition-colors group">
+                  <tr key={fact.id} className="bg-surface dark:bg-surface-dark hover:bg-surface-muted transition-colors group">
                     <td className="px-4 py-3">
                       <div className="text-sm text-text-primary font-medium">{fact.text}</div>
                       <div className="text-xs text-slate-500 mt-1">

@@ -24,46 +24,47 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api")
 
 # Product routes — all require Clerk authentication + workspace authorization.
-_protected_deps = [Depends(require_workspace_access("workspace_id"))]
+# Workspace list/provision endpoints handled separately (no workspace_id path param).
+_workspace_deps = [Depends(require_workspace_access("workspace_id"))]
 
+# Workspace routes: list and provision don't require existing mapping.
 app.include_router(
     workspaces_router,
     prefix="/api",
-    dependencies=_protected_deps,
 )
 app.include_router(
     facts_router,
     prefix="/api",
-    dependencies=_protected_deps,
+    dependencies=_workspace_deps,
 )
 app.include_router(
     evidence_router,
     prefix="/api",
-    dependencies=_protected_deps,
+    dependencies=_workspace_deps,
 )
 app.include_router(
     content_router,
     prefix="/api",
-    dependencies=_protected_deps,
+    dependencies=_workspace_deps,
 )
 
 # Review write endpoint requires admin permission; read endpoint requires workspace access.
 app.include_router(
     review_router,
     prefix="/api",
-    dependencies=_protected_deps,
+    dependencies=_workspace_deps,
 )
 
 app.include_router(
     analyze_router,
     prefix="/api",
-    dependencies=_protected_deps,
+    dependencies=_workspace_deps,
 )
 
 app.include_router(
     releases_router,
     prefix="/api",
-    dependencies=_protected_deps,
+    dependencies=_workspace_deps,
 )
 
 # POC routes are guarded by require_development_env.

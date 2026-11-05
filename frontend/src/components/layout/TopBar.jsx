@@ -11,7 +11,7 @@ export function TopBar({ workspace, backendStatus, onSidebarToggle, isSidebarOpe
 
   return (
     <header
-      className="sticky top-0 z-50 bg-surface/95 backdrop-blur backdrop-blur-md border-b border-border"
+      className="sticky top-0 z-50 bg-surface dark:bg-surface-dark/95 backdrop-blur backdrop-blur-md border-b border-border"
     >
       <div className="flex items-center justify-between px-6 py-3">
         <div className="flex items-center gap-4">
@@ -19,12 +19,12 @@ export function TopBar({ workspace, backendStatus, onSidebarToggle, isSidebarOpe
             <div className="w-8 h-8 rounded bg-green-700 flex items-center justify-center text-white font-bold">
               B
             </div>
-            <span className="font-bold text-lg text-navy-950 dark:text-text-primary tracking-tight">
+            <span className="font-bold text-lg text-brand-950 dark:text-brand-dark tracking-tight">
               BRANDCORE
             </span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-muted border border-border text-xs font-medium text-text-secondary">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-muted dark:bg-surface-muted-dark border border-border text-xs font-medium text-text-secondary">
             <span className="w-2 h-2 rounded-full bg-green-700" />
             <span className="hidden sm:inline">Workspace: </span>
             <span>{workspace?.name || '—'}</span>

@@ -6,7 +6,7 @@ export function Card({ className = '', children, padding = 'p-6' }) {
   return (
     <div
       className={
-        'bg-surface border border-border rounded-lg shadow-sm ' +
+        'bg-surface dark:bg-surface-dark border border-border rounded-lg shadow-sm ' +
         padding + ' ' + className
       }
     >

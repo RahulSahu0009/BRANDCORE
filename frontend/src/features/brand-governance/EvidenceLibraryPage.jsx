@@ -219,7 +219,7 @@ export default function EvidenceLibraryPage() {
                 </tr>
               ) : (
                 filteredEvidence.map((item) => (
-                  <tr key={item.id} className="bg-surface hover:bg-surface-muted transition-colors group">
+                  <tr key={item.id} className="bg-surface dark:bg-surface-dark hover:bg-surface-muted transition-colors group">
                     <td className="px-4 py-3">
                       <div className="text-sm text-text-primary font-medium">{item.title}</div>
                       <div className="text-xs text-slate-500 mt-1 truncate max-w-xs">{item.source_url || '—'}</div>

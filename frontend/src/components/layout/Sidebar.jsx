@@ -56,7 +56,7 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed, onCollapseChange
 
   const sidebarClasses = [
     'fixed inset-y-0 left-0 z-40 flex flex-col transition-all duration-300 ease-in-out',
-    'border-r border-border bg-surface',
+    'border-r border-border bg-surface dark:bg-surface-dark',
     isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH,
     'transform',
   ].join(' ')

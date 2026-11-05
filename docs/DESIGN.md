@@ -1,6 +1,6 @@
 # BRANDCORE — Design System
 
-**Version:** 0.3.0 · **Authority:** This is the single source of truth for all BRANDCORE application UI.
+**Version:** 0.4.0 · **Authority:** This is the single source of truth for all BRANDCORE application UI.
 **Direction:** Refined editorial SaaS + forest-green identity + intelligent data presentation.
 Professional editorial B2B governance workspace. Calm, precise, evidence-first.
 Not a generic AI chat UI and not a cinematic marketing page.
@@ -142,7 +142,7 @@ Page padding: desktop 24px, tablet 16px, mobile 12–16px.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  BRANDCORE                    [Workspace: Demo Brand] │  ← Top nav (surface bg, sticky)
+│  BRANDCORE                    [Workspace: Demo Brand] │  ← Top nav (surface bg, sticky, z-50)
 ├──────────────┬──────────────────────────────────────┤
 │              │                                       │
 │  Sidebar     │  Main content area                    │
@@ -156,13 +156,13 @@ Page padding: desktop 24px, tablet 16px, mobile 12–16px.
 └──────────────┴──────────────────────────────────────┘
 ```
 
-- Top nav: `surface` background, sticky, `border-b`, workspace context, theme toggle, Clerk auth controls
-- Sidebar: `surface` background, `border-r`, collapsible (256px expanded / 80px collapsed), icon-only when collapsed with tooltips
+- Top nav: `surface` background, sticky, `border-b`, workspace context, theme toggle, Clerk auth controls (z-50)
+- Sidebar: `surface` background, `border-r`, collapsible (256px expanded / 80px collapsed), icon-only when collapsed with tooltips (z-40)
 - Active nav item: `bg-green-100` (light) / `bg-green-900/20` (dark), `text-green-700` (light) / `text-green-400` (dark)
-- Main content: `canvas` background, padding offset for sidebar width (`pl-64` expanded / `pl-20` collapsed)
-- Mobile: hamburger toggle opens overlay drawer with backdrop, escape-to-close, body scroll locked
+- Main content: `canvas` background, padding offset for sidebar width (`md:pl-64` expanded / `md:pl-20` collapsed, `pl-4` mobile)
+- Mobile: hamburger toggle (z-50) opens overlay drawer with backdrop, escape-to-close, body scroll locked
 
-**Sidebar collapse:** Preference persisted in `localStorage` under `brandcore-sidebar-collapsed`. No layout flash on init.
+**Sidebar collapse:** Preference persisted in `localStorage` under `brandcore-sidebar-collapsed`. No layout flash on init. Collapse toggle has `aria-expanded`, `aria-controls`, accessible name.
 
 ---
 
@@ -171,12 +171,12 @@ Page padding: desktop 24px, tablet 16px, mobile 12–16px.
 | Layer | z-index | Use |
 |-------|---------|-----|
 | Base content | 0 | Page content |
-| Mobile hamburger | 30 | Fixed toggle button |
-| Mobile backdrop | 30 | Drawer backdrop |
-| Sidebar | 20 | Fixed sidebar |
-| Top bar | 30 | Sticky header (above sidebar) |
+| Sidebar | 40 | Fixed sidebar (desktop) |
+| Top bar | 50 | Sticky header (above sidebar) |
+| Mobile hamburger | 50 | Fixed toggle button |
+| Mobile backdrop | 50 | Drawer backdrop |
+| Drawer (mobile) | 50 | Mobile navigation drawer |
 | Modals/dialogs | 50 | Overlay dialogs |
-| Drawer (mobile) | 40 | Mobile navigation drawer |
 
 Do not use arbitrary `z-index: 9999`. Use the established layers above.
 
@@ -261,10 +261,11 @@ Verify with axe on the deployed build. Do not claim WCAG AA compliance until ver
 | Breakpoint | Width | Layout |
 |-----------|-------|--------|
 | Mobile | < 768px | Single column; hamburger toggle opens overlay drawer; sidebar hidden |
-| Tablet | 768px–1024px | Sidebar 256px; main content flex-1 |
+| Tablet | ≥ 768px | Sidebar 256px; main content flex-1 |
 | Desktop | > 1024px | Sidebar 256px; main content flex-1 |
 
 Sidebar collapsed width: 80px (icon only, tooltips on hover).
+Content offset: `md:pl-64` expanded / `md:pl-20` collapsed; `pl-4` on mobile.
 
 ---
 
@@ -291,7 +292,52 @@ Sidebar collapsed width: 80px (icon only, tooltips on hover).
 
 ---
 
-## 13. Authentication UI States
+## 13. Workspace Onboarding
+
+When a signed-in Clerk user has an active Organization but no BRANDCORE workspace mapping:
+
+**Organization Admin/Owner:**
+- Presented with a "Create Workspace" action
+- Can enter a workspace display name and optional slug
+- Provisions workspace via protected backend POST `/api/workspaces/provision`
+- Uses verified Clerk organization ID
+- Mapping created atomically and idempotently
+- Shows success state and reloads into the new workspace
+
+**Organization Member:**
+- Informed that an organization administrator needs to set up the workspace
+- No administrator-only creation action shown
+- Directed to ask an admin, then refresh
+
+**Backend unavailable:** Retryable service error shown, not "no workspace access"
+
+**Organization unauthorized:** Access-denied state shown
+
+Never automatically maps to `ws_demo`. Never hardcodes workspace IDs. Never bypasses Clerk verification or backend authorization.
+
+---
+
+## 14. Backend Status Indicator
+
+Explicit statuses with no indefinite "Connecting" state:
+
+| Status | Meaning | User Action |
+|--------|---------|-------------|
+| `checking` | Initial health check in progress | None — transient |
+| `connected` | Backend reachable | None |
+| `offline` | Backend unreachable | Retry action available |
+| `unavailable` | Backend misconfigured | Retry action available |
+
+- Health check polls every 30 seconds
+- 401/403 responses are treated as `connected` (auth error, not backend offline)
+- Failed health requests reach a final state with retry action
+- Backend availability is separate from authentication status
+- Interval cleaned up on component unmount
+- No duplicate health requests
+
+---
+
+## 15. Authentication UI States
 
 | Auth state | UI behavior |
 |------------|-------------|
@@ -307,7 +353,7 @@ Demo mode (backend endpoints unavailable but auth valid): Clearly labeled amber 
 
 ---
 
-## 14. API Loading and Error States
+## 16. API Loading and Error States
 
 | API result | UI behavior |
 |------------|-------------|
@@ -324,7 +370,7 @@ Prevent duplicate requests caused by repeated component renders. Do not hide bac
 
 ---
 
-## 15. Performance Budget
+## 17. Performance Budget
 
 | Metric | Target | Status |
 |--------|--------|--------|
@@ -337,7 +383,7 @@ Measure on the deployed build. If the JS budget is exceeded, document an ADR wit
 
 ---
 
-## 16. What Not to Do
+## 18. What Not to Do
 
 - No generic compliance score widget
 - No elaborate onboarding animations
@@ -351,7 +397,7 @@ Measure on the deployed build. If the JS budget is exceeded, document an ADR wit
 
 ---
 
-## 17. Component Ownership
+## 19. Component Ownership
 
 - **Shared design system:** All components in `src/components/ui/` and `src/components/layout/`
 - **Sidebar and application shell:** Shared, used by all pages

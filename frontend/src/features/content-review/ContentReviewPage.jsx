@@ -262,7 +262,7 @@ export default function ContentReviewPage() {
                     {contentVersions.map((version) => (
                       <div
                         key={version.id}
-                        className="flex items-start gap-3 p-3 rounded-lg border border-border bg-surface hover:bg-surface-muted transition-colors cursor-pointer"
+                        className="flex items-start gap-3 p-3 rounded-lg border border-border bg-surface dark:bg-surface-dark hover:bg-surface-muted transition-colors cursor-pointer"
                         onClick={() => {
                           if (version.review_status === 'PENDING') {
                             handleAnalyze(version.id)

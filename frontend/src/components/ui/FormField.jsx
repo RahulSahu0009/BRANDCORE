@@ -32,8 +32,8 @@ export function FormInput({ id, className = '', ...props }) {
     <input
       id={id}
       className={
-        'block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary ' +
-        'placeholder:text-slate-400 ' +
+        'block w-full rounded-md border border-border bg-surface dark:bg-surface-dark px-3 py-2 text-sm text-text-primary dark:text-text-primary-dark ' +
+        'placeholder:text-slate-400 dark:placeholder:text-slate-500 ' +
         'focus:ring-2 focus:ring-focus focus:border-transparent ' +
         'transition-colors disabled:opacity-50 disabled:pointer-events-none ' +
         className
@@ -49,8 +49,8 @@ export function FormTextarea({ id, className = '', rows = 4, ...props }) {
       id={id}
       rows={rows}
       className={
-        'block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary ' +
-        'placeholder:text-slate-400 ' +
+        'block w-full rounded-md border border-border bg-surface dark:bg-surface-dark px-3 py-2 text-sm text-text-primary dark:text-text-primary-dark ' +
+        'placeholder:text-slate-400 dark:placeholder:text-slate-500 ' +
         'focus:ring-2 focus:ring-focus focus:border-transparent ' +
         'transition-colors disabled:opacity-50 disabled:pointer-events-none resize-none ' +
         className
@@ -65,7 +65,7 @@ export function FormSelect({ id, className = '', ...props }) {
     <select
       id={id}
       className={
-        'block w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text-primary ' +
+        'block w-full rounded-md border border-border bg-surface dark:bg-surface-dark px-3 py-2 text-sm text-text-primary dark:text-text-primary-dark ' +
         'focus:ring-2 focus:ring-focus focus:border-transparent ' +
         'transition-colors disabled:opacity-50 disabled:pointer-events-none ' +
         className

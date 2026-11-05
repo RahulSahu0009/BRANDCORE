@@ -139,4 +139,7 @@ export const api = {
 
   getStaleImpact: (workspaceId, releaseId) =>
     request('GET', `/workspaces/${workspaceId}/releases/${releaseId}/stale-impact`),
+
+  provisionWorkspace: (name, slug) =>
+    request('POST', '/workspaces/provision', { name, slug }),
 }

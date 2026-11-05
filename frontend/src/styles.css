@@ -23,6 +23,20 @@
     @apply border-border;
   }
 
+  /* Dark mode surface overrides — ensures all bg-surface classes respond to theme */
+  html.dark .bg-surface {
+    background-color: #111827;
+  }
+  html.dark .bg-surface-muted {
+    background-color: #1E293B;
+  }
+  html.dark .text-slate-500 {
+    color: #94A3B8;
+  }
+  html.dark .border-border {
+    border-color: #334155;
+  }
+
   /* Ensure theme class is applied before paint to prevent flash */
   html.dark {
     color-scheme: dark;

@@ -214,7 +214,7 @@ export default function ReleaseGovernancePage() {
                 filteredReleases.map((release) => (
                   <tr
                     key={release.id}
-                    className="bg-surface hover:bg-surface-muted transition-colors group cursor-pointer"
+                    className="bg-surface dark:bg-surface-dark hover:bg-surface-muted transition-colors group cursor-pointer"
                     onClick={() => setSelectedRelease(release)}
                   >
                     <td className="px-4 py-3">
