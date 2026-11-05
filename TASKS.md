@@ -35,12 +35,12 @@
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
 | M2-01 | Write D1 migration: workspace, evidence, approved_fact, policy, terminology | Mritunjay | VERIFIED | M1-03 | Migration 0002_core_data_foundation.sql applied; 6 tables + 11 indexes; all FK, CHECK, UNIQUE and workspace-isolation constraints verified; rollback tested; forward re-apply confirmed; 20/20 tests pass — 2026-11-04 |
-| M2-02 | Write D1 migration: content_item, content_version, candidate_claim, verification_finding | Mritunjay | TODO | M2-01 | Migration runs; tables created; rollback tested |
-| M2-03 | Write D1 migration: claim_fact_dependency, review_decision, release_passport, release_status_event, audit_event | Mritunjay | TODO | M2-02 | Migration runs; tables created; rollback tested |
-| M2-04 | Seed demo workspace with fictional brand data | Mritunjay | TODO | M2-03 | Demo workspace loads with facts, evidence and content items |
-| M2-05 | Repository layer: workspace, fact, evidence CRUD with parameterized SQL | Mritunjay | TODO | M2-01 | Unit tests pass; no SQL concatenation; workspace-scoped queries |
-| M2-06 | Repository layer: content version, claim, finding, review decision | Mritunjay | TODO | M2-02 | Unit tests pass; immutability enforced |
-| M2-07 | Repository layer: release passport, status events, dependency traversal | Mritunjay | TODO | M2-03 | Unit tests pass; passport immutability enforced; stale query works |
+| M2-02 | Write D1 migration: content_item, content_version, candidate_claim, verification_finding | Mritunjay | VERIFIED | M2-01 | Migration 0003_content_claims_verification.sql applied locally; 4 tables + triggers + indexes; FK/CHECK/UNIQUE/workspace-isolation and immutability constraints verified against real SQLite; rollback tested; forward re-apply confirmed; 44/44 backend tests pass; local D1 state updated — 2026-11-05 |
+| M2-03 | Write D1 migration: claim_fact_dependency, review_decision, release_passport, release_status_event, audit_event | Mritunjay | VERIFIED | M2-02 | Migration 0004_release_governance.sql applied locally; 5 tables + 2 triggers + indexes; FK/CHECK/UNIQUE/workspace-isolation and passport immutability verified against real SQLite; rollback tested; forward re-apply confirmed; local D1 state updated — 2026-11-05 |
+| M2-04 | Seed demo workspace with fictional brand data | Mritunjay | VERIFIED | M2-03 | Idempotent seed script `src/app/seed_demo.py`; deterministic uuid5 ids; parameterized SQL; demo data demonstrates supported/numeric/qualifier/scope/terminology cases; repeated seed creates no duplicates — 2026-11-05 |
+| M2-05 | Repository layer: workspace, fact, evidence CRUD with parameterized SQL | Mritunjay | VERIFIED | M2-01 | WorkspaceRepository, ApprovedFactRepository, EvidenceRepository in `src/app/repositories/`; all queries workspace-scoped; no SQL concatenation; unit tests pass — 2026-11-05 |
+| M2-06 | Repository layer: content version, claim, finding, review decision | Mritunjay | VERIFIED | M2-02 | ContentItemRepository, ContentVersionRepository (immutable, no update path), CandidateClaimRepository, VerificationFindingRepository, ReviewDecisionRepository; version ordering asc/desc; latest version; batch grouping — 2026-11-05 |
+| M2-07 | Repository layer: release passport, status events, dependency traversal | Mritunjay | VERIFIED | M2-03 | ReleasePassportRepository (immutable), ReleaseStatusEventRepository (append-only), ClaimFactDependencyRepository (fact→claims, claim→facts traversal), AuditEventRepository, StaleDetectionRepository (evidence→fact→claim→version→passport traversal; duplicate stale events prevented) — 2026-11-05 |
 
 ---
 
@@ -48,11 +48,11 @@
 
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
-| M3-01 | AI service: extract candidate claims from content version using Workers AI | Mritunjay | TODO | M1-06, M2-06 | Claims extracted; Pydantic model validates output; test passes |
-| M3-02 | Deterministic check: unsupported claim and numeric mismatch | Mritunjay | TODO | M2-05 | Unit tests cover both finding types with positive and negative cases |
-| M3-03 | Deterministic check: claim stronger than evidence, missing qualifier | Mritunjay | TODO | M2-05 | Unit tests cover both finding types |
-| M3-04 | Deterministic check: scope mismatch, expired offer, unapproved terminology | Mritunjay | TODO | M2-05 | Unit tests cover all three finding types |
-| M3-05 | API endpoint: POST /api/workspaces/:id/content/:vid/analyze | Mritunjay | TODO | M3-01–M3-04 | Returns structured findings; all 7 finding types detectable |
+| M3-01 | AI service: extract candidate claims from content version using Workers AI | Mritunjay | VERIFIED | M1-06, M2-06 | `ClaimExtractionService` in `src/app/services/ai_extraction.py`; Pydantic-validated output; fake binding tests cover valid/null/integer/decimal/string numeric, malformed JSON, missing fields, unavailable binding, input size limits — 14 tests pass; no remote inference |
+| M3-02 | Deterministic check: unsupported claim and numeric mismatch | Mritunjay | VERIFIED | M2-05 | `VerificationEngine` in `src/app/services/verification_engine.py`; Decimal exact comparison; positive/negative cases for both types — 25 tests pass |
+| M3-03 | Deterministic check: claim stronger than evidence, missing qualifier | Mritunjay | VERIFIED | M2-05 | Strength/qualifier mappings; positive/negative cases for both types |
+| M3-04 | Deterministic check: scope mismatch, expired offer, unapproved terminology | Mritunjay | VERIFIED | M2-05 | Scope subset comparison; injectable clock for expiry; word-boundary terminology; positive/negative cases for all three types |
+| M3-05 | API endpoint: POST /api/workspaces/:id/content/:vid/analyze | Mritunjay | VERIFIED | M3-01–M3-04 | `POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze` in `src/app/api/analyze.py`; structured claims+findings; workspace-scoped; error handling (404/400/422/502/500); analysis history preserved; no auto approval — integration tests pass |
 
 ---
 

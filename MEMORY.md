@@ -18,9 +18,9 @@
 
 ## Current State
 
-**Milestone:** M2 — Data Foundation (M2-01 VERIFIED)
-**Status:** M2-01 complete. Ready for M2-02.
-**Last verified:** 2026-11-04 @ M2-01 VERIFIED
+**Milestone:** M2 → M3 complete (M2-01 through M2-07, M3-01 through M3-05 VERIFIED)
+**Status:** Data foundation and claim analysis engine complete; 130/130 backend tests pass; migration 0004 applied to local D1 state
+**Last verified:** 2026-11-05 @ M3-05 VERIFIED; 130/130 backend tests pass; frontend build success
 
 ---
 
@@ -59,34 +59,50 @@
 - [x] M1-04 PASS_LOCAL: `POST /api/poc/r2` → put/get via `env.ASSETS`
 - [x] M1-06 VERIFIED: attempt 4 HTTP 200 (4.262s); Pydantic PASS; `claim_type: null`, `numeric_value: 40` (int) accepted; tokens 86+64=150; raw and usage captured — evidence in `docs/evidence/M1-06/attempt-4-final/`
 - [x] M2-01 VERIFIED: migration `0002_core_data_foundation.sql`; 6 tables (workspace, evidence, approved_fact, fact_evidence, policy, terminology); 11 indexes; all FK/CHECK/UNIQUE/workspace-isolation constraints verified with actual D1 execute results; rollback `0002_core_data_foundation_rollback.sql` tested; forward re-apply confirmed; ADR-009 added; ARCHITECTURE.md §5 updated; 20/20 tests pass — 2026-11-04
+- [x] M2-02 VERIFIED: migration `0003_content_claims_verification.sql`; 4 tables (content_item, content_version, candidate_claim, verification_finding); 4 triggers (2 immutability, 2 claim→version match); 13 indexes; all FK/CHECK/UNIQUE/workspace-isolation and immutability constraints verified against real SQLite; rollback `0003_content_claims_verification_rollback.sql` tested; forward re-apply confirmed; Wrangler migration-tracker behavior verified (apply → d1_migrations recorded → re-apply no-op → manual rollback → tracker still records applied → tracker no-op on re-apply); local D1 state (.wrangler/state/v3) updated with 0003; 24 new schema tests added; 44/44 backend tests pass — 2026-11-05
+- [x] M2-03 VERIFIED: migration `0004_release_governance.sql`; 5 tables (claim_fact_dependency, review_decision, release_passport, release_status_event, audit_event); 2 triggers (passport immutability); indexes; FK/CHECK/UNIQUE/workspace-isolation verified against real SQLite; rollback `0004_release_governance_rollback.sql` tested; forward re-apply confirmed; manual SQL execute ≠ tracker replay (tracker still records applied after rollback); local D1 state (.wrangler/state/v3) updated with 0004 — 2026-11-05
+- [x] M2-04 VERIFIED: idempotent seed script `src/app/seed_demo.py`; deterministic uuid5 ids; parameterized SQL; demo data demonstrates supported/numeric/qualifier/scope/terminology cases; repeated seed creates no duplicates — 2026-11-05
+- [x] M2-05 VERIFIED: WorkspaceRepository, ApprovedFactRepository, EvidenceRepository in `src/app/repositories/`; all queries workspace-scoped; parameterized SQL only; no SQL concatenation; unit tests pass — 2026-11-05
+- [x] M2-06 VERIFIED: ContentItemRepository, ContentVersionRepository (immutable, no update path), CandidateClaimRepository, VerificationFindingRepository, ReviewDecisionRepository; version ordering asc/desc; latest version; batch grouping; workspace isolation — 2026-11-05
+- [x] M2-07 VERIFIED: ReleasePassportRepository (immutable), ReleaseStatusEventRepository (append-only), ClaimFactDependencyRepository (fact→claims, claim→facts traversal), AuditEventRepository, StaleDetectionRepository (evidence→fact→claim→version→passport traversal; duplicate stale events prevented via `has_status_event`) — 2026-11-05
 - [x] M1-08 DONE: POC route guard — `require_development_env` dependency reads `BRANDCORE_ENV` from `request.scope["env"]`; `wrangler.jsonc` `vars.BRANDCORE_ENV` set for default (development) and production; 8 guard tests in `test_poc_guard.py`; security-checklist controls 5, 9, 18 updated — 2026-11-04
 - [x] Repository organization: `tools/skill-doctor.mjs`, `docs/archive/bootstrap/`, `docs/prompts/archive/`, `FILE_INVENTORY.json` deleted — 2026-11-04
 - [x] `backend/tests/test_ai_schema.py`: 6 schema tests — all PASS (2026-11-04)
-- [x] All 17 tests pass: `uv run pytest backend/tests/ -v` (2026-11-04)
+- [x] **M3-01 VERIFIED:** `ClaimExtractionService` in `src/app/services/ai_extraction.py`; Pydantic-validated output; `ClaimExtractionError`; fake binding; input truncation; tests cover valid/null/integer/decimal/string numeric, malformed JSON, missing fields, unavailable binding, input size limits — 14 tests pass; no remote inference — 2026-11-05
+- [x] **M3-02 VERIFIED:** `VerificationEngine` in `src/app/services/verification_engine.py`; unsupported_claim and numeric_mismatch checks; Decimal exact comparison; positive/negative cases — 25 tests pass — 2026-11-05
+- [x] **M3-03 VERIFIED:** claim_stronger_than_evidence and missing_qualifier checks; strength mapping; qualifier required logic — part of 25 verification engine tests — 2026-11-05
+- [x] **M3-04 VERIFIED:** scope_mismatch, expired_offer (injectable clock), unapproved terminology (word-boundary) checks — part of 25 verification engine tests — 2026-11-05
+- [x] **M3-05 VERIFIED:** `POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze` in `src/app/api/analyze.py`; `AnalysisService` in `src/app/services/analysis_service.py` orchestrating fetch→extract→persist→verify→persist→dependencies→audit via atomic `db.batch()`; structured claims+findings response; workspace-scoped; error handling (404/400/422/502/500); analysis history preserved; registered in `src/app/main.py` — 7 integration tests pass; full suite 130/130 pass — 2026-11-05
+- [x] Frontend `npm run build`: success — 2026-11-05
+- [x] All 17 tests pass (M1 baseline); 44/44 pass (M2); 130/130 pass (M3 full regression) — 2026-11-05
 
 ---
 
 ## Remaining Tasks (prioritized)
 
-1. **M2-02**: D1 migration — content_item, content_version, candidate_claim, verification_finding
-2. **Milestone 2 remaining**: M2-03 through M2-07
-
----
+1. **Milestone 4**: M4-01 through M4-06 (Content Review UI — Rahul)
+2. **Milestone 5**: M5-01 through M5-06 (Brand Governance and Release UI — Arvind)
+3. **Milestone 6**: M6-01 through M6-04 (Integration and Release — All)
 
 ## Blockers & Decisions Required
 
-- **M2-01 VERIFIED.** Migration 0002 applied locally; all constraints tested with actual D1 results.
 - **Cloudflare account IDs:** `wrangler.jsonc` still has `<D1_DATABASE_ID>` placeholder. Real ID requires user approval.
+- **Commit and push:** M2-01 commit `d0729e4` and subsequent M2/M3 work not yet pushed to `origin/develop` (remote `codewithmj890/BRANDCORE`, default branch `develop` at `80d592d`). Requires explicit user approval before committing/pushing.
 
 ---
 
 ## Tests & Checks Run
 
-- `python -m pytest backend/tests/ -v`: **20/20 passed** (pytest 9.1.1, Python 3.14.6, 2026-11-04 ×2)
-- `npx wrangler d1 migrations apply brandcore-db --local`: **0002 ✅** (18 commands, 2026-11-04)
-- Rollback `0002_core_data_foundation_rollback.sql`: **6 commands ✅** — poc_records intact (2026-11-04)
-- Forward re-apply after rollback: **17 commands ✅** (IF NOT EXISTS idempotent, 2026-11-04)
-- `npm run build`: **success** — 145.63 kB JS / 47.08 kB gzip (2026-11-04)
+- `uv run pytest backend/tests/ -v`: **20/20 passed** (M1 baseline, pytest 9.1.1, Python 3.14.6, 2026-11-04)
+- `uv run pytest backend/tests/ -v`: **44/44 passed** (M2-02 regression, pytest 9.2.0, Python 3.14.6, 2026-11-05)
+- `uv run pytest backend/tests/ -v`: **130/130 passed** (full M2+M3 regression, 2026-11-05) — includes 24 M2-02 schema tests, 25 M2-03 schema tests, seed tests, 14 M3-01 extraction tests, 25 M3-02→M3-04 verification tests, 7 M3-05 analysis tests, M2-05→M2-07 repo tests
+- `npx wrangler d1 migrations apply brandcore-db --local`: **0002 ✅ / 0003 ✅ / 0004 ✅** applied to local state (.wrangler/state/v3); re-apply is a tracker no-op
+- Rollback `0002_core_data_foundation_rollback.sql`: **6 commands ✅** — poc_records intact
+- Rollback `0003_content_claims_verification_rollback.sql`: **4 commands ✅** — M2-01 tables + poc_records intact
+- Rollback `0004_release_governance_rollback.sql`: **✅** — release governance tables dropped; M2-01/M2-02 tables intact
+- Forward re-apply after rollback: **idempotent ✅** (IF NOT EXISTS; 2026-11-05)
+- Manual `wrangler d1 execute --file rollback` ≠ tracker replay: tracker still records migration as applied (confirmed 2026-11-05)
+- `npm run build`: **success** — 145.63 kB JS / 47.08 kB gzip (2026-11-05)
 - `curl GET /api/health`: **HTTP 200** `{"status":"ok","version":"0.1.0"}` (2026-11-04)
 - `curl GET /`: **HTTP 200** `text/html` (2026-11-04)
 - `curl POST /api/poc/d1`: **PASS_LOCAL** — insert + read back (2026-11-04)
@@ -118,7 +134,7 @@ Gate B and Gate B-sub approved. `brandcore.workers.dev` registered.
 
 ## NEXT ACTION
 
-**Task:** M2-02 — D1 migration for content_item, content_version, candidate_claim, verification_finding.
-**Branch:** `feature/mritunjay/data-foundation` (current)
+**Task:** Update M4/M5 UI milestones (owner Rahul / Arvind) or proceed to M6 integration; user decision required.
+**Branch:** `feature/mritunjay/data-foundation` (current; M2-01 commit `d0729e4` not yet pushed to origin/develop)
 
-*Last updated: 2026-11-04 — M2-01 VERIFIED; 20/20 tests pass; migration 0002 applied locally*
+*Last updated: 2026-11-05 — M2-01 through M2-07 and M3-01 through M3-05 VERIFIED; 130/130 backend tests pass; migration 0004 applied to local D1 state*

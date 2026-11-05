@@ -50,7 +50,10 @@ backend/src/
 └── app/
     ├── main.py            # FastAPI app factory, middleware, router registration
     ├── api/
-    │   └── health.py      # GET /api/health
+    │   ├── health.py      # GET /api/health
+    │   ├── poc.py         # POC endpoints (D1, R2, Workers AI) — development only
+    │   ├── dependencies.py # POC route security guard
+    │   └── analyze.py     # POST /api/workspaces/{id}/content/{vid}/analyze
     ├── core/              # Config, logging, error handling
     ├── domain/            # Pydantic models and domain types
     ├── repositories/      # D1 and R2 access (parameterized SQL only)
@@ -97,19 +100,54 @@ The browser has no direct access to any binding. All binding access is through a
 
 **Deletion behaviour:** All business tables use `ON DELETE RESTRICT` on their workspace FK. Evidence and approved_fact rows cannot be deleted while referenced by `fact_evidence`. This preserves the full provenance chain.
 
-### 5.2 Remaining entities (schema pending M2-02 and M2-03)
+### 5.2 M2-02 — Content, claims and verification (VERIFIED 2026-11-05, migration 0003)
 
-| Entity | Key Fields | Notes |
-|--------|-----------|-------|
-| `content_item` | id, workspace_id, title | Parent record |
-| `content_version` | id, content_item_id, body_text, sha256_hash | Immutable |
-| `candidate_claim` | id, content_version_id, text, extracted_by | AI-extracted |
-| `verification_finding` | id, content_version_id, claim_id, finding_type, reason | Deterministic |
-| `claim_fact_dependency` | claim_id, fact_version_id | Links claims to facts |
-| `review_decision` | id, content_version_id, reviewer_id, decision, timestamp | Human only |
-| `release_passport` | id, content_version_id, content_hash, policy_version_id, status | Immutable snapshot |
-| `release_status_event` | id, passport_id, status, reason, timestamp | Append-only |
-| `audit_event` | id, workspace_id, actor_id, action, timestamp | Append-only |
+| Table | Key Columns | Constraints | Notes |
+|-------|-------------|-------------|-------|
+| `content_item` | id TEXT PK, workspace_id FK, title, status, created_by, created_at, updated_at | UNIQUE(workspace_id, id); CHECK status IN ('active','archived'); ON DELETE RESTRICT on workspace | Logical content asset; mutable title/status live here |
+| `content_version` | id TEXT PK, workspace_id, content_item_id, version_number, body_text, sha256_hash, submitted_by, created_at | UNIQUE(workspace_id, id); UNIQUE(content_item_id, version_number); CHECK version_number >= 1; CHECK length(sha256_hash) = 64; composite FK (content_item_id, workspace_id) → content_item(id, workspace_id) ON DELETE RESTRICT | Immutable snapshot; body in D1 (text only per PRD §7); sha256_hash server-side; immutability enforced by BEFORE UPDATE/BEFORE DELETE triggers |
+| `candidate_claim` | id TEXT PK, workspace_id, content_version_id, claim_text, claim_type, numeric_value_text, unit, qualifier, scope, extraction_batch_id, extracted_by, extracted_at | UNIQUE(workspace_id, id); composite FK (content_version_id, workspace_id) → content_version(id, workspace_id) ON DELETE RESTRICT; claim_type/numeric_value_text/unit/qualifier/scope nullable | AI-extracted claim; numeric_value_text stored as TEXT (no float conversion); extraction_batch_id groups one extraction run; never an approved_fact |
+| `verification_finding` | id TEXT PK, workspace_id, content_version_id, claim_id (nullable), finding_type, severity, explanation, suggested_correction, analysis_batch_id, created_at | CHECK finding_type IN (7 canonical types); CHECK severity IN ('critical','high','medium','low'); composite FK (content_version_id, workspace_id) → content_version(id, workspace_id) ON DELETE RESTRICT; composite FK (claim_id, workspace_id) → candidate_claim(id, workspace_id) ON DELETE RESTRICT; trigger enforces claim.content_version_id = finding.content_version_id when claim_id set | Deterministic finding; claim_id nullable (content-level findings allowed); analysis_batch_id groups one check run |
+
+**Indexes (13 total):** content_item(workspace_id), content_item(workspace_id, status); content_version(workspace_id), content_version(content_item_id, version_number); candidate_claim(workspace_id), candidate_claim(content_version_id), candidate_claim(extraction_batch_id); verification_finding(workspace_id), verification_finding(content_version_id), verification_finding(claim_id) WHERE claim_id IS NOT NULL, verification_finding(content_version_id, finding_type), verification_finding(analysis_batch_id).
+
+**Relationships:**
+```
+workspace → content_item → content_version → candidate_claim
+content_version → verification_finding
+```
+A `verification_finding` may also reference a `candidate_claim` from that same `content_version`. Composite foreign keys enforce workspace isolation at every link: a content version cannot reference a content item from another workspace; a claim cannot reference a content version from another workspace; a finding cannot reference a claim from a different content version or workspace.
+
+**Content storage decision:** The `content_version.body_text` content body is stored in D1 (text content only; PRD §7 excludes video/audio review). R2 is reserved for private evidence/assets (see §4 binding table). This matches the existing M2-01 convention and introduces no storage decision that contradicts the architecture.
+
+**Immutability:** `content_version` rows are immutable. `BEFORE UPDATE` and `BEFORE DELETE` triggers abort any mutation with an explicit error message (`content_version rows are immutable: updates/deletes are not permitted`). There is no mutable `current_version` snapshot; the latest version is derived from `version_number`.
+
+**Remaining entities (schema pending M2-03):** `claim_fact_dependency`, `review_decision`, `release_passport`, `release_status_event`, `audit_event` (see §5.3). These are intentionally out of scope for M2-02.
+
+### 5.3 M2-03 — Release governance and dependency chain (VERIFIED 2026-11-05, migration 0004)
+
+| Table | Key Columns | Constraints | Notes |
+|-------|-------------|-------------|-------|
+| `claim_fact_dependency` | claim_id, fact_version_id, claim_workspace, fact_workspace, linked_at | PK(claim_id, fact_version_id); composite FK (claim_id, claim_workspace) → candidate_claim(id, workspace_id) ON DELETE RESTRICT; composite FK (fact_version_id, fact_workspace) → approved_fact(id, workspace_id) ON DELETE RESTRICT; CHECK claim_workspace = fact_workspace | Links each candidate claim to the approved fact version(s) it depends on; workspace isolation enforced at DB level |
+| `review_decision` | id TEXT PK, workspace_id FK, content_version_id FK, reviewer_id, decision, justification, created_at | CHECK decision IN ('approved','request_changes','rejected'); composite FK (content_version_id, workspace_id) → content_version(id, workspace_id) ON DELETE RESTRICT | Human-only decision; one per content version; no auto-approval path |
+| `release_passport` | id TEXT PK, workspace_id FK, content_version_id FK, content_hash, policy_version_id, status, previous_passport_id, created_by, created_at | CHECK status IN ('valid','stale','revoked','invalid'); composite FK (content_version_id, workspace_id) → content_version(id, workspace_id) ON DELETE RESTRICT; immutability enforced by BEFORE UPDATE trigger | Immutable snapshot of versions used at approval; `release_passport rows are immutable` |
+| `release_status_event` | id TEXT PK, passport_id FK, status, reason, timestamp | composite FK (passport_id, workspace_id) → release_passport(id, workspace_id) ON DELETE RESTRICT | Append-only status transitions (VALID → STALE → REVOKED → INVALID); passport never rewritten |
+| `audit_event` | id TEXT PK, workspace_id FK, actor_id, action, target_type, target_id, metadata_json, timestamp | CHECK metadata_json starts with [ or {; composite FK (workspace_id) → workspace(id) ON DELETE RESTRICT | Append-only audit trail; one row per actor action |
+
+**Indexes:** claim_fact_dependency(claim_id), claim_fact_dependency(fact_version_id); review_decision(workspace_id), review_decision(content_version_id); release_passport(workspace_id), release_passport(content_version_id), release_passport(status); release_status_event(passport_id); audit_event(workspace_id), audit_event(timestamp).
+
+**Relationships:**
+```
+content_version → candidate_claim → claim_fact_dependency → approved_fact
+content_version → verification_finding
+content_version → review_decision
+content_version → release_passport → release_status_event
+```
+
+**Passport immutability:** `release_passport` rows are immutable. A `BEFORE UPDATE` trigger aborts any mutation with `release_passport rows are immutable: status changes are recorded as release_status_event rows only`. Historical passports are never rewritten; revalidation creates a new passport.
+
+**Stale detection:** `StaleDetectionRepository` traverses evidence → approved_fact → candidate_claim → content_version → release_passport to find releases affected by a fact version change. Duplicate stale events are prevented by checking `has_status_event` before inserting.
+
 
 ---
 
@@ -234,7 +272,6 @@ Outcome:    FAIL; M1-06 remains BLOCKED
 **Verification rule:** Verify current official Cloudflare documentation and package compatibility before choosing or updating package versions and Wrangler/Pywrangler configuration. Record the date and official URLs in this document and in `docs/TOOLING_AUDIT.md`. Never invent a successful integration.
 
 ---
-
 ## 10. Local Development
 
 ```bash
@@ -251,9 +288,62 @@ cd backend && uv sync && pywrangler dev
 
 Local dev uses `.dev.vars` for secrets (never committed). See `.dev.vars.example` for required variable names.
 
----
+## 11. Claim Analysis Engine — M3 (VERIFIED 2026-11-05)
 
-## References
+### 11.1 AI claim extraction (M3-01)
+
+`ClaimExtractionService` in `src/app/services/ai_extraction.py` calls Workers AI via the `AI` binding to extract candidate claims from a `content_version.body_text`. Input is truncated to the binding's size limit. Output is validated with Pydantic (`ClaimExtractionResult`) before use; a `ClaimExtractionError` is raised on binding failure, malformed JSON, or missing required fields. A fake binding is used in tests; no remote inference in the test suite.
+
+### 11.2 Deterministic verification engine (M3-02 → M3-04)
+
+`VerificationEngine` in `src/app/services/verification_engine.py` runs deterministic checks over extracted candidate claims against approved facts, evidence, policies and terminology. All 7 finding types are supported:
+
+| Finding type | Check | Severity |
+|-------------|-------|----------|
+| `unsupported_claim` | Claim not matched to any approved fact/evidence | critical/high |
+| `numeric_mismatch` | Claim numeric value disagrees with fact value (Decimal exact comparison) | critical/high |
+| `claim_stronger_than_evidence` | Claim strength exceeds fact qualifier (e.g. "eliminates" vs "reduces") | high/medium |
+| `missing_qualifier` | Claim omits a required qualifier present on the fact | medium |
+| `scope_mismatch` | Claim scope not subset of fact scope | medium |
+| `expired_offer` | Fact offer expired (injectable clock for testability) | high |
+| `unapproved_terminology` | Claim uses denied terminology (word-boundary match) | medium |
+
+Severities: `critical`, `high`, `medium`, `low`. Findings are deduplicated by `(finding_type, claim_id)`. An injectable clock makes expiry deterministic in tests.
+
+### 11.3 Analysis orchestration (M3-05)
+
+`AnalysisService` in `src/app/services/analysis_service.py` orchestrates the full pipeline in a single atomic `db.batch()` transaction:
+1. Fetch content version (workspace-scoped, 404 if missing)
+2. Extract candidate claims via `ClaimExtractionService`
+3. Persist claims (`CandidateClaimRepository`)
+4. Verify claims via `VerificationEngine`
+5. Persist findings (`VerificationFindingRepository`)
+6. Create claim→fact dependencies (`ClaimFactDependencyRepository`)
+7. Record audit event (`AuditEventRepository`)
+
+`POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze` in `src/app/api/analyze.py` returns structured claims + findings with batch IDs. Errors: 404 (not found), 400 (already analyzed), 422 (invalid input), 502 (AI unavailable), 500 (server error). Registered in `src/app/main.py` under `/api`. Analysis history is preserved; no auto-approval path exists.
+
+### 11.4 Repository layer (M2-05 → M2-07)
+
+All repositories live in `src/app/repositories/` and use parameterized SQL only. SQL never appears in route handlers, services, or React components.
+
+| Repository | Responsibility |
+|------------|---------------|
+| `WorkspaceRepository` | Workspace CRUD; workspace-scoped |
+| `ApprovedFactRepository` | Approved fact CRUD; versioned; immutability via new-row |
+| `EvidenceRepository` | Evidence CRUD; status lifecycle |
+| `ContentItemRepository` | Content item CRUD |
+| `ContentVersionRepository` | Immutable content versions; no update path; version ordering |
+| `CandidateClaimRepository` | AI-extracted claims; extraction batch grouping |
+| `VerificationFindingRepository` | Deterministic findings; batch grouping |
+| `ReviewDecisionRepository` | Human review decisions; one per content version |
+| `ReleasePassportRepository` | Immutable passports; status-only transitions |
+| `ReleaseStatusEventRepository` | Append-only status events |
+| `ClaimFactDependencyRepository` | Claim↔fact bidirectional traversal |
+| `AuditEventRepository` | Append-only audit trail |
+| `StaleDetectionRepository` | Evidence→fact→claim→version→passport traversal; duplicate prevention |
+
+---
 
 - Cloudflare Python Workers: https://developers.cloudflare.com/workers/languages/python/ (verify current docs)
 - Cloudflare D1: https://developers.cloudflare.com/d1/
@@ -263,4 +353,4 @@ Local dev uses `.dev.vars` for secrets (never committed). See `.dev.vars.example
 - Wrangler: https://developers.cloudflare.com/workers/wrangler/
 - Pywrangler: https://developers.cloudflare.com/workers/languages/python/packages/ (verify current name/package)
 
-*Last verified: 2026-11-04 — URLs are pointers; verify current content before implementation.*
+*Last verified: 2026-11-05 — M2-01 through M2-07 and M3-01 through M3-05 VERIFIED; 130/130 backend tests pass; URLs are pointers; verify current content before implementation.*
