@@ -43,8 +43,13 @@ function AppWithAuth() {
   const [activePage, setActivePage] = useState('overview')
   const [backendStatus, setBackendStatus] = useState('checking')
 
-  // Periodic health checking — separate from auth status
+  // Periodic health checking — only when signed in
   useEffect(() => {
+    if (!isSignedIn) {
+      setBackendStatus('checking')
+      return
+    }
+
     let cancelled = false
     let timer
 
@@ -83,7 +88,7 @@ function AppWithAuth() {
       clearInterval(timer)
       unsubscribe()
     }
-  }, [backendStatus])
+  }, [isSignedIn, backendStatus])
 
   // Not loaded yet — show loading shell
   if (!isLoaded) {

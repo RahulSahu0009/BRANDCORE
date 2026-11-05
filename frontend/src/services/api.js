@@ -39,10 +39,15 @@ export function onAuthError(callback) {
 
 async function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' }
-  let token = await getToken({ template: 'brandcore-api' })
-  // Fallback to default token if template-specific token is unavailable
-  if (!token) {
-    token = await getToken()
+  let token = null
+  try {
+    token = await getToken({ template: 'brandcore-api' })
+    // Fallback to default token if template-specific token is unavailable
+    if (!token) {
+      token = await getToken()
+    }
+  } catch {
+    // Clerk session not available — proceed without Authorization header
   }
   if (token) {
     headers.Authorization = `Bearer ${token}`
