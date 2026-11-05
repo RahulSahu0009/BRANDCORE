@@ -4,7 +4,7 @@
  * and page routing. No hardcoded workspace IDs.
  */
 import React, { useEffect, useState } from 'react'
-import { useAuth } from '@clerk/react'
+import { useAuth, useClerk } from '@clerk/react'
 import { api, onBackendStatusChange } from './services/api.js'
 import { AppShell } from './components/layout/AppShell'
 import { ThemeToggle } from './components/ui/theme/ThemeToggle'
@@ -31,6 +31,7 @@ const PAGE_COMPONENTS = {
 
 function AppWithAuth() {
   const { isSignedIn, isLoaded } = useAuth()
+  const clerk = useClerk()
   const { orgId, workspaceId, workspaceName } = useWorkspace()
   const [activePage, setActivePage] = useState('content')
   const [healthStatus, setHealthStatus] = useState('loading')
@@ -75,8 +76,12 @@ function AppWithAuth() {
         <div className="flex flex-col items-center justify-center h-64 text-slate-500">
           <p className="mb-4 text-text-primary">Sign in to continue</p>
             <div className="flex gap-3">
-              <Button variant="primary">Sign in</Button>
-              <Button variant="ghost">Sign up</Button>
+              <Button variant="primary" onClick={() => clerk.openSignIn()}>
+                Sign in
+              </Button>
+              <Button variant="ghost" onClick={() => clerk.openSignUp()}>
+                Sign up
+              </Button>
             </div>
         </div>
       </AppShell>

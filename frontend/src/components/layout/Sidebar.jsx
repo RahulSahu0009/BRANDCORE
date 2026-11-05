@@ -84,7 +84,7 @@ export function Sidebar({ activeItem, onItemClick, isCollapsed: propCollapsed })
     <>
       {/* Desktop sidebar (always present, collapsible) */}
       <aside
-        className={sidebarClasses}
+        className={['hidden md:flex', sidebarClasses].join(' ')}
         aria-label="Main navigation"
       >
         <div className="flex-1 overflow-y-auto">
