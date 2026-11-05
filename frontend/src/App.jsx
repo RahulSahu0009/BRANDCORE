@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { api } from './services/api.js'
+import ContentReviewPage from './features/content-review/ContentReviewPage.jsx'
 
 const NAV_ITEMS = [
   { id: 'facts', label: 'Approved Facts', owner: 'Arvind' },
@@ -59,6 +60,8 @@ export default function App() {
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
+              type="button"
+              aria-current={activeNav === item.id ? 'page' : undefined}
               onClick={() => setActiveNav(item.id)}
               className={`w-full text-left px-4 py-2 text-sm focus-visible:outline-2 focus-visible:outline-[#2563EB] ${
                 activeNav === item.id
@@ -74,7 +77,11 @@ export default function App() {
         {/* Main content */}
         <main className="flex-1 p-6">
           <h1 className="text-xl font-bold text-[#162638] mb-4">{active.label}</h1>
-          <Placeholder title={active.label} owner={active.owner} />
+          {activeNav === 'content' ? (
+            <ContentReviewPage />
+          ) : (
+            <Placeholder title={active.label} owner={active.owner} />
+          )}
         </main>
       </div>
     </div>

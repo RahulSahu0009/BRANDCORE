@@ -14,11 +14,25 @@ async function request(method, path, body) {
   if (body !== undefined) {
     options.body = JSON.stringify(body)
   }
-  const res = await fetch(`${BASE}${path}`, options)
-  const data = await res.json()
+  let res
+  try {
+    res = await fetch(`${BASE}${path}`, options)
+  } catch {
+    const err = new Error('Network error. Check your connection and try again.')
+    err.code = 'NETWORK_ERROR'
+    throw err
+  }
+  // Non-JSON bodies (e.g. a plain-text 500) must not surface a raw SyntaxError.
+  let data = null
+  try {
+    data = await res.json()
+  } catch {
+    data = null
+  }
   if (!res.ok) {
-    const err = new Error(data?.error?.message ?? 'Request failed')
-    err.code = data?.error?.code
+    const err = new Error(data?.error?.message ?? 'Request failed. Please try again.')
+    err.code = data?.error?.code ?? 'INTERNAL_ERROR'
+    err.field = data?.error?.field
     err.status = res.status
     throw err
   }

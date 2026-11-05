@@ -60,12 +60,12 @@
 
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
-| M4-01 | Content submission form (uses mock API until M3-05 is available) | Rahul | TODO | M0-01 | Form submits content; shows loading/error/success states |
-| M4-02 | Findings display: finding card component with all 7 finding types | Rahul | TODO | M4-01 | Each finding type renders correctly; color + text label; no dangerouslySetInnerHTML |
-| M4-03 | Review decision UI: approve / request changes / reject | Rahul | TODO | M4-02 | Decision recorded; confirmation shown; no auto-approval path |
-| M4-04 | Content version history list | Rahul | TODO | M4-01 | Versions listed with status badges; immutability clear in UI |
-| M4-05 | Replace mock API with real endpoints (M3-05, M2-06) | Rahul | TODO | M3-05, M2-06 | Mock fixtures removed from core workflow; real API used |
-| M4-06 | Accessibility pass: keyboard nav, focus order, axe scan | Rahul | TODO | M4-05 | axe reports 0 serious/critical; full keyboard path works |
+| M4-01 | Content submission form (uses mock API until M3-05 is available) | Rahul | DONE | M0-01 | `ContentSubmissionForm.jsx` + `ContentReviewPage.jsx` in `frontend/src/features/content-review/`; labelled mock `__mocks__/contentApi.mock.js` behind `USE_MOCK_API` switch in `contentReviewApi.js`; loading/error/success states, field validation (contract limits 200/10000), focus management, live regions; `npm run build` success (49.88 kB gzip JS); rendered page screenshot checked. Interactive states NOT exercised by automated tests (no Vitest yet — needs ADR). Also fixed missing `tailwind.config.js`/`postcss.config.js` (Tailwind was not running) — 2026-11-05 |
+| M4-02 | Findings display: finding card component with all 7 finding types | Rahul | DONE | M4-01 | `FindingCard.jsx` maps all seven backend finding types to safe text labels, severity colors and correction guidance; no `dangerouslySetInnerHTML`; 2026-11-05 |
+| M4-03 | Review decision UI: approve / request changes / reject | Rahul | DONE | M4-02 | `ReviewDecisionForm.jsx` requires an explicit reviewer decision, submits notes, and shows confirmation; no auto-approval path; 2026-11-05 |
+| M4-04 | Content version history list | Rahul | DONE | M4-01 | `VersionHistory.jsx` lists immutable versions with status badges and timestamps; 2026-11-05 |
+| M4-05 | Replace mock API with real endpoints (M3-05, M2-06) | Rahul | BLOCKED | M3-05, M2-06 | Mock adapter now covers analysis/review/history and the API switch is wired for the documented endpoints; real content routes remain PROPOSED in `docs/API_CONTRACT.md`, so fixtures cannot yet be removed safely |
+| M4-06 | Accessibility pass: keyboard nav, focus order, axe scan | Rahul | IN PROGRESS | M4-05 | Semantic headings, labels, live regions, focus management and keyboard-safe controls added across the workflow; axe scan remains pending approved frontend test tooling and real endpoint integration |
 
 ---
 

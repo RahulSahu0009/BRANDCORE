@@ -74,6 +74,7 @@
 - [x] **M3-04 VERIFIED:** scope_mismatch, expired_offer (injectable clock), unapproved terminology (word-boundary) checks — part of 25 verification engine tests — 2026-11-05
 - [x] **M3-05 VERIFIED:** `POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze` in `src/app/api/analyze.py`; `AnalysisService` in `src/app/services/analysis_service.py` orchestrating fetch→extract→persist→verify→persist→dependencies→audit via atomic `db.batch()`; structured claims+findings response; workspace-scoped; error handling (404/400/422/502/500); analysis history preserved; registered in `src/app/main.py` — 7 integration tests pass; full suite 130/130 pass — 2026-11-05
 - [x] Frontend `npm run build`: success — 2026-11-05
+- [x] **M4-01 DONE** (Rahul, branch `feature/rahul/content-review`): content submission form with loading/error/success states on labelled mock (`USE_MOCK_API = true` in `frontend/src/features/content-review/contentReviewApi.js`); demo workspace id `ece5a803-9018-5e1d-b355-fffc4d41a33b` (uuid5 from seed). Tailwind was never running (no `tailwind.config.js`/`postcss.config.js`; build shipped raw `@tailwind` directives) — configs added with DESIGN.md tokens, no new deps. `api.js` now handles non-JSON/network errors and exposes `err.field`. Build: 154.64 kB JS / 49.88 kB gzip, 12.32 kB CSS — 2026-11-05
 - [x] All 17 tests pass (M1 baseline); 44/44 pass (M2); 130/130 pass (M3 full regression) — 2026-11-05
 
 ---
@@ -87,6 +88,8 @@
 ## Blockers & Decisions Required
 
 - **Cloudflare account IDs:** `wrangler.jsonc` still has `<D1_DATABASE_ID>` placeholder. Real ID requires user approval.
+- **Frontend tooling gaps:** no Vitest (T-FE-10..15 need an ADR to add it); `npm run lint` broken — ESLint 9 needs `eslint.config.js` and rejects `--ext`.
+- **Content API endpoints missing:** `POST /content`, `GET /content/:id/versions`, `POST /review` are PROPOSED only; M4-05 blocked on them. Enum casing differs between API_CONTRACT (UPPERCASE) and DB/engine (lowercase) — needs Mritunjay to confirm before M4-02 mocks.
 - **Commit and push:** M2-01 commit `d0729e4` and subsequent M2/M3 work not yet pushed to `origin/develop` (remote `codewithmj890/BRANDCORE`, default branch `develop` at `80d592d`). Requires explicit user approval before committing/pushing.
 
 ---
@@ -134,7 +137,7 @@ Gate B and Gate B-sub approved. `brandcore.workers.dev` registered.
 
 ## NEXT ACTION
 
-**Task:** Update M4/M5 UI milestones (owner Rahul / Arvind) or proceed to M6 integration; user decision required.
+**Task:** M4-02 finding cards (Rahul) — confirm finding-type enum casing with Mritunjay first. M4-01 done on `feature/rahul/content-review` (uncommitted).
 **Branch:** `feature/mritunjay/data-foundation` (current; M2-01 commit `d0729e4` not yet pushed to origin/develop)
 
 *Last updated: 2026-11-05 — M2-01 through M2-07 and M3-01 through M3-05 VERIFIED; 130/130 backend tests pass; migration 0004 applied to local D1 state*
