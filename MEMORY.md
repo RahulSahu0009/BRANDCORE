@@ -19,8 +19,8 @@
 ## Current State
 
 **Milestone:** M2 → M3 complete (M2-01 through M2-07, M3-01 through M3-05 VERIFIED); Clerk authentication implemented (VERIFIED); UI redesign complete (UX-01 through UX-10 DONE)
-**Status:** Data foundation, claim analysis engine, Clerk authentication, and premium frontend UI all complete; 192/192 backend tests pass; migration 0004 applied to local D1 state; migration 0005 (workspace_org_mapping) created but not yet applied to local D1 state; frontend build success (122 modules)
-**Last verified:** 2026-11-05 @ UI redesign build success; 192/192 backend tests pass
+**Status:** Data foundation, claim analysis engine, Clerk authentication, premium frontend UI, and M5-05 backend API all complete; 192/192 backend tests pass; all 5 D1 migrations applied to local state (0001–0005); frontend build success (122 modules); local Worker verified via wrangler dev --local
+**Last verified:** 2026-11-05 @ UI redesign build success; 192/192 backend tests pass; M5-05 backend API routes + 48 regression tests pass; local Worker health endpoint HTTP 200
 
 ---
 
@@ -74,6 +74,7 @@
 - [x] **M3-04 VERIFIED:** scope_mismatch, expired_offer (injectable clock), unapproved terminology (word-boundary) checks — part of 25 verification engine tests — 2026-11-05
 - [x] **M3-05 VERIFIED:** `POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze` in `src/app/api/analyze.py`; `AnalysisService` in `src/app/services/analysis_service.py` orchestrating fetch→extract→persist→verify→persist→dependencies→audit via atomic `db.batch()`; structured claims+findings response; workspace-scoped; error handling (404/400/422/502/500); analysis history preserved; registered in `src/app/main.py` — 7 integration tests pass; full suite 130/130 pass — 2026-11-05
 - [x] **Clerk Authentication (Phase 8):** `src/app/auth/clerk.py` — RS256 JWT verification via JWKS + `pow()` (Pyodide-compatible, stdlib only); `src/app/auth/dependencies.py` — workspace org → D1 workspace mapping + `require_workspace_access`/`require_workspace_permission` dependencies; `src/app/main.py` — analyze routes protected, health stays public; migration `0005_clerk_workspace_mapping.sql` created; 44 new auth tests (test_auth_clerk.py, test_workspace_auth.py, test_api_protection.py) — all pass; full suite 192/192 pass — 2026-11-05
+- [x] **M5-05 VERIFIED:** Backend API endpoints for all 6 resource types — workspaces (GET), facts (GET/POST/GET/PATCH), evidence (GET/GET), content (POST/GET/GET/versions/version), review (POST/GET), releases (GET/GET/stale-impact). All routes registered in `src/app/main.py` with `require_workspace_access` auth. 48 integration tests pass (`backend/tests/test_*.py`). Local Worker verified via `wrangler dev --local --config wrangler.local.jsonc` — `GET /api/health` returns HTTP 200 `{"status":"ok","version":"0.1.0"}` — 2026-11-05
 - [x] Frontend `npm run build`: success — 2026-11-05
 - [x] All 17 tests pass (M1 baseline); 44/44 pass (M2); 130/130 pass (M3 full regression); 192/192 pass (with Clerk auth) — 2026-11-05
 
@@ -104,7 +105,8 @@
 - Rollback `0004_release_governance_rollback.sql`: **✅** — release governance tables dropped; M2-01/M2-02 tables intact
 - Forward re-apply after rollback: **idempotent ✅** (IF NOT EXISTS; 2026-11-05)
 - Manual `wrangler d1 execute --file rollback` ≠ tracker replay: tracker still records migration as applied (confirmed 2026-11-05)
-- `npm run build`: **success** — 145.63 kB JS / 47.08 kB gzip (2026-11-05)
+- `npx wrangler dev --local --config wrangler.local.jsonc`: **Worker starts successfully** on port 8787; `GET /api/health` returns HTTP 200 `{"status":"ok","version":"0.1.0"}` — 2026-11-05
+- `pytest ../backend/tests/test_*_api.py -v`: **48/48 passed** (M5-05 API integration tests: workspaces, facts, evidence, content, review, releases), 2026-11-05
 - `curl GET /api/health`: **HTTP 200** `{"status":"ok","version":"0.1.0"}` (2026-11-04)
 - `curl GET /`: **HTTP 200** `text/html` (2026-11-04)
 - `curl POST /api/poc/d1`: **PASS_LOCAL** — insert + read back (2026-11-04)
@@ -137,6 +139,6 @@ Gate B and Gate B-sub approved. `brandcore.workers.dev` registered.
 ## NEXT ACTION
 
 **Task:** Proceed to M6 integration (replace mock APIs with real endpoints) or address blockers; user decision required.
-**Branch:** `feature/mritunjay/ui-redesign` (created from `feature/mritunjay/clerk-authentication` at `56c3e4b`; UI redesign + Clerk auth changes uncommitted; not yet pushed to origin/develop)
+**Branch:** `feature/mritunjay/ui-redesign` (committed `2a023ef`, pushed to origin; Clerk auth + UI redesign complete, 192/192 backend tests pass)
 
 *Last updated: 2026-11-05 — Clerk authentication implemented and verified; 192/192 backend tests pass; migration 0005 created but not yet applied to local D1 state*

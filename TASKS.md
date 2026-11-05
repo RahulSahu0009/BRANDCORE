@@ -88,7 +88,7 @@
 | M5-02 | Evidence reference management UI | Arvind | DONE | M5-01 | Evidence records listed; linked to facts |
 | M5-03 | Release Passport list with status badges | Arvind | DONE | M0-01 | Passports listed; VALID/STALE/REVOKED/INVALID badges shown |
 | M5-04 | Stale impact view: which releases are affected by a fact change | Arvind | DONE | M5-03 | Stale releases listed with reason; revalidation action available |
-| M5-05 | Replace mock API with real endpoints (M2-05, M2-07) | Arvind | TODO | M2-05, M2-07 | Mock fixtures removed from core workflow; real API used |
+| M5-05 | Replace mock API with real endpoints (M2-05, M2-07) | Arvind | **VERIFIED** | M2-05, M2-07 | 6 API modules created and registered (workspaces, facts, evidence, content, review, releases); 48 integration tests pass; local Worker verified via wrangler dev --local — 2026-11-05 |
 | M5-06 | Accessibility pass: keyboard nav, focus order, axe scan | Arvind | TODO | M5-05 | axe reports 0 serious/critical; full keyboard path works |
 
 ---
