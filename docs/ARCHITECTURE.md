@@ -78,15 +78,29 @@ The browser has no direct access to any binding. All binding access is through a
 
 ## 5. D1 Relational Entities and Relationships
 
-Conceptual entities (schema to be defined in a later bounded task after the D1 proof-of-concept gate passes):
+### 5.1 M2-01 — Core data foundation (VERIFIED 2026-11-04, migration 0002)
+
+| Table | Key Columns | Constraints | Notes |
+|-------|-------------|-------------|-------|
+| `workspace` | id TEXT PK, name, slug, demo_flag, status, created_at, updated_at | UNIQUE(slug); CHECK demo_flag IN (0,1); CHECK status IN ('active','archived') | Scopes all data |
+| `evidence` | id TEXT PK, workspace_id FK, title, source_type, summary, source_url, version, status, created_at | UNIQUE(workspace_id, id); CHECK source_type IN (...); CHECK status IN ('active','superseded','retracted'); ON DELETE RESTRICT | Immutable rows; new version = new row; ai_generated rejected at DB level |
+| `approved_fact` | id TEXT PK, workspace_id FK, claim_text, numeric_value TEXT, unit, qualifier, scope, version, status, previous_version_id, created_by, created_at | UNIQUE(workspace_id, id); CHECK status IN ('active','superseded','retracted'); ON DELETE RESTRICT | Versioned; old versions preserved |
+| `fact_evidence` | fact_id, fact_workspace, evidence_id, ev_workspace, linked_at | PK(fact_id, evidence_id); composite FKs to approved_fact(id,workspace_id) and evidence(id,workspace_id); CHECK fact_workspace = ev_workspace | Many-to-many; workspace isolation enforced at DB level |
+| `policy` | id TEXT PK, workspace_id FK, name, description, rules_json, version, status, previous_version_id, created_by, created_at | UNIQUE(workspace_id, id); CHECK rules_json starts with [ or {; CHECK status IN ('active','superseded','archived'); ON DELETE RESTRICT | Versioned; rules stored as JSON array |
+| `terminology` | id TEXT PK, workspace_id FK, term, status, notes, created_at, updated_at | UNIQUE(workspace_id, term); CHECK status IN ('approved','denied','preferred'); ON DELETE RESTRICT | One entry per term per workspace |
+
+**Indexes (11 total):** workspace(status); evidence(workspace_id), evidence(workspace_id, status); approved_fact(workspace_id), approved_fact(workspace_id, status); fact_evidence(fact_id), fact_evidence(evidence_id); policy(workspace_id), policy(workspace_id, status); terminology(workspace_id), terminology(workspace_id, status).
+
+**Fact-to-evidence relationship:** Many-to-many via `fact_evidence` join table. A single approved fact can cite multiple supporting evidence records. This supersedes the single `evidence_id` FK shown in the earlier conceptual model (see ADR-009).
+
+**Workspace isolation:** `fact_evidence` uses composite foreign keys referencing `(id, workspace_id)` on both parent tables, plus a `CHECK (fact_workspace = ev_workspace)` constraint. A fact cannot be linked to evidence from a different workspace at the database level.
+
+**Deletion behaviour:** All business tables use `ON DELETE RESTRICT` on their workspace FK. Evidence and approved_fact rows cannot be deleted while referenced by `fact_evidence`. This preserves the full provenance chain.
+
+### 5.2 Remaining entities (schema pending M2-02 and M2-03)
 
 | Entity | Key Fields | Notes |
 |--------|-----------|-------|
-| `workspace` | id, name, demo_flag | Scopes all data |
-| `evidence` | id, workspace_id, source_url, version | Immutable versions |
-| `approved_fact` | id, workspace_id, evidence_id, scope, qualifier, version | Versioned |
-| `policy` | id, workspace_id, version | Versioned |
-| `terminology` | id, workspace_id, term, status | Allow/deny list |
 | `content_item` | id, workspace_id, title | Parent record |
 | `content_version` | id, content_item_id, body_text, sha256_hash | Immutable |
 | `candidate_claim` | id, content_version_id, text, extracted_by | AI-extracted |

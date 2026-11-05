@@ -139,3 +139,21 @@
 - All data access is server-side validated and authorized.
 - Audit events are recorded server-side.
 - No client-side D1 SDK, R2 SDK or Workers AI SDK in the frontend.
+
+---
+
+## ADR-009 — Many-to-many fact-to-evidence relationship via join table
+
+**Date:** 2026-11-04
+**Status:** Accepted
+**Deciders:** Mritunjay Singh (Team Lead)
+
+**Context:** `docs/ARCHITECTURE.md` §5 showed a single `evidence_id` FK on `approved_fact`, implying one evidence record per fact. The PRD §4 describes "approved facts with scope, qualifier and evidence reference" and the dependency chain in §6 implies a fact may be supported by multiple sources (e.g. an internal study plus a third-party report). A single FK would require duplicating fact rows to cite additional evidence, which breaks versioning semantics.
+
+**Decision:** Implement a `fact_evidence` join table providing a many-to-many relationship between `approved_fact` and `evidence`. Composite foreign keys on both sides reference `(id, workspace_id)` on the parent tables. A `CHECK (fact_workspace = ev_workspace)` constraint enforces workspace isolation at the database level.
+
+**Consequences:**
+- A fact can cite one or more evidence records without duplicating the fact row.
+- Workspace isolation is enforced at the DB level, not only in application code.
+- The conceptual single `evidence_id` column shown in the earlier architecture sketch is superseded by this join table.
+- Repository queries for "all evidence supporting a fact" use a simple join on `fact_evidence`.

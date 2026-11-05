@@ -18,9 +18,9 @@
 
 ## Current State
 
-**Milestone:** M1 — Cloudflare Runtime POC (5/5 checks PASS; M1-06 VERIFIED)
-**Status:** M1 COMPLETE. All POC checks passed. Ready for Milestone 2.
-**Last verified:** 2026-11-04 @ M1-06 attempt 4 PASS_REMOTE
+**Milestone:** M2 — Data Foundation (M2-01 VERIFIED)
+**Status:** M2-01 complete. Ready for M2-02.
+**Last verified:** 2026-11-04 @ M2-01 VERIFIED
 
 ---
 
@@ -58,7 +58,7 @@
 - [x] M1-03 PASS_LOCAL: `POST /api/poc/d1` → insert + read back via `env.DB`
 - [x] M1-04 PASS_LOCAL: `POST /api/poc/r2` → put/get via `env.ASSETS`
 - [x] M1-06 VERIFIED: attempt 4 HTTP 200 (4.262s); Pydantic PASS; `claim_type: null`, `numeric_value: 40` (int) accepted; tokens 86+64=150; raw and usage captured — evidence in `docs/evidence/M1-06/attempt-4-final/`
-- [x] M1-07 DONE: `docs/ARCHITECTURE.md` §9 and `docs/TOOLING_AUDIT.md` updated with evidence
+- [x] M2-01 VERIFIED: migration `0002_core_data_foundation.sql`; 6 tables (workspace, evidence, approved_fact, fact_evidence, policy, terminology); 11 indexes; all FK/CHECK/UNIQUE/workspace-isolation constraints verified with actual D1 execute results; rollback `0002_core_data_foundation_rollback.sql` tested; forward re-apply confirmed; ADR-009 added; ARCHITECTURE.md §5 updated; 20/20 tests pass — 2026-11-04
 - [x] M1-08 DONE: POC route guard — `require_development_env` dependency reads `BRANDCORE_ENV` from `request.scope["env"]`; `wrangler.jsonc` `vars.BRANDCORE_ENV` set for default (development) and production; 8 guard tests in `test_poc_guard.py`; security-checklist controls 5, 9, 18 updated — 2026-11-04
 - [x] Repository organization: `tools/skill-doctor.mjs`, `docs/archive/bootstrap/`, `docs/prompts/archive/`, `FILE_INVENTORY.json` deleted — 2026-11-04
 - [x] `backend/tests/test_ai_schema.py`: 6 schema tests — all PASS (2026-11-04)
@@ -68,23 +68,24 @@
 
 ## Remaining Tasks (prioritized)
 
-1. **M0-02**: Git repository initialized ✅ — push to GitHub pending (user action: create empty repo, then run push commands)
-2. **Milestone 2**: Data foundation (D1 schema, migrations, repositories)
+1. **M2-02**: D1 migration — content_item, content_version, candidate_claim, verification_finding
+2. **Milestone 2 remaining**: M2-03 through M2-07
 
 ---
 
 ## Blockers & Decisions Required
 
-- **M1 complete and secured.** All 5 POC checks PASS. POC route guard implemented and tested.
-- **Git repository initialized** at `C:\BRANDCORE` — main branch, initial commit `32a2381`, develop branch created.
-- **GitHub push pending** — user must create empty `BRANDCORE` repo on GitHub, then run the push commands in TEAM_HANDOFF.md.
+- **M2-01 VERIFIED.** Migration 0002 applied locally; all constraints tested with actual D1 results.
 - **Cloudflare account IDs:** `wrangler.jsonc` still has `<D1_DATABASE_ID>` placeholder. Real ID requires user approval.
 
 ---
 
 ## Tests & Checks Run
 
-- `python -m pytest backend/tests/ -v`: **20/20 passed** (pytest 9.1.1, Python 3.14.6, 2026-11-04)
+- `python -m pytest backend/tests/ -v`: **20/20 passed** (pytest 9.1.1, Python 3.14.6, 2026-11-04 ×2)
+- `npx wrangler d1 migrations apply brandcore-db --local`: **0002 ✅** (18 commands, 2026-11-04)
+- Rollback `0002_core_data_foundation_rollback.sql`: **6 commands ✅** — poc_records intact (2026-11-04)
+- Forward re-apply after rollback: **17 commands ✅** (IF NOT EXISTS idempotent, 2026-11-04)
 - `npm run build`: **success** — 145.63 kB JS / 47.08 kB gzip (2026-11-04)
 - `curl GET /api/health`: **HTTP 200** `{"status":"ok","version":"0.1.0"}` (2026-11-04)
 - `curl GET /`: **HTTP 200** `text/html` (2026-11-04)
@@ -117,7 +118,7 @@ Gate B and Gate B-sub approved. `brandcore.workers.dev` registered.
 
 ## NEXT ACTION
 
-**Task:** Push to GitHub — create empty `BRANDCORE` repo on GitHub, add remote, push main and develop.
-**Then:** Invite Rahul Sahu and Arvind Shah as collaborators. See `docs/TEAM_HANDOFF.md` for branch and onboarding instructions.
+**Task:** M2-02 — D1 migration for content_item, content_version, candidate_claim, verification_finding.
+**Branch:** `feature/mritunjay/data-foundation` (current)
 
-*Last updated: 2026-11-04 — git init complete; 20/20 tests pass; main commit 32a2381; develop branch created; GitHub push pending*
+*Last updated: 2026-11-04 — M2-01 VERIFIED; 20/20 tests pass; migration 0002 applied locally*

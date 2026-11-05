@@ -34,7 +34,7 @@
 
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
-| M2-01 | Write D1 migration: workspace, evidence, approved_fact, policy, terminology | Mritunjay | TODO | M1-03 | Migration runs; tables created; rollback tested |
+| M2-01 | Write D1 migration: workspace, evidence, approved_fact, policy, terminology | Mritunjay | VERIFIED | M1-03 | Migration 0002_core_data_foundation.sql applied; 6 tables + 11 indexes; all FK, CHECK, UNIQUE and workspace-isolation constraints verified; rollback tested; forward re-apply confirmed; 20/20 tests pass — 2026-11-04 |
 | M2-02 | Write D1 migration: content_item, content_version, candidate_claim, verification_finding | Mritunjay | TODO | M2-01 | Migration runs; tables created; rollback tested |
 | M2-03 | Write D1 migration: claim_fact_dependency, review_decision, release_passport, release_status_event, audit_event | Mritunjay | TODO | M2-02 | Migration runs; tables created; rollback tested |
 | M2-04 | Seed demo workspace with fictional brand data | Mritunjay | TODO | M2-03 | Demo workspace loads with facts, evidence and content items |
