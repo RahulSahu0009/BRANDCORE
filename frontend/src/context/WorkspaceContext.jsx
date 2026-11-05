@@ -20,10 +20,15 @@ export function WorkspaceProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthError((status) => {
       if (status === 401) {
+        // Session expired or invalid — user needs to sign in again
         setAuthStatus('signed-out')
         setWorkspaceId(null)
+        setWorkspaceName(null)
       } else if (status === 403) {
+        // Access denied — organization not mapped to workspace
         setAuthStatus('no-workspace')
+        setWorkspaceId(null)
+        setWorkspaceName(null)
       }
     })
     return unsubscribe
@@ -77,12 +82,18 @@ export function WorkspaceProvider({ children }) {
         setAuthStatus('no-workspace')
       }
     } catch (err) {
-      if (err.status === 403 || err.status === 401) {
+      if (err.status === 401) {
+        setAuthStatus('signed-out')
+        setWorkspaceId(null)
+        setWorkspaceName(null)
+      } else if (err.status === 403) {
         setAuthStatus('no-workspace')
         setWorkspaceId(null)
+        setWorkspaceName(null)
       } else {
         setAuthStatus('no-workspace')
         setWorkspaceId(null)
+        setWorkspaceName(null)
       }
     }
   }, [])

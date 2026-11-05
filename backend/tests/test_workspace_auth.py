@@ -372,3 +372,147 @@ class TestProvisioningConcurrency:
             assert False, "Expected UNIQUE constraint violation on org_id"
         except sqlite3.IntegrityError:
             pass  # Expected
+
+
+# ---------------------------------------------------------------------------
+# Clerk v2 nested organization claims tests
+# ---------------------------------------------------------------------------
+
+class TestClerkNestedOrgClaims:
+    """Clerk v2 session tokens carry org claims under nested 'o' object."""
+
+    def test_clerk_user_stores_passed_values(self):
+        """ClerkUser stores whatever org values are passed to it."""
+        user = ClerkUser(
+            user_id="user-1",
+            email="test@example.com",
+            org_id="org-v2",
+            org_role="org:admin",
+            org_permissions=["org:system_memberships:read"],
+            claims={"sub": "user-1"},
+            org_slug="my-org",
+        )
+
+        assert user.org_id == "org-v2"
+        assert user.org_role == "org:admin"
+        assert user.org_slug == "my-org"
+        assert "org:system_memberships:read" in user.org_permissions
+        assert user.has_organization is True
+
+    def test_clerk_user_no_org_context(self):
+        """ClerkUser with no org values has no organization."""
+        user = ClerkUser(
+            user_id="user-1",
+            email="test@example.com",
+            org_id=None,
+            org_role=None,
+            org_permissions=[],
+            claims={"sub": "user-1"},
+        )
+
+        assert user.org_id is None
+        assert user.org_role is None
+        assert user.has_organization is False
+
+    def _make_fake_token(self, claims: dict) -> str:
+        """Create a minimally structured JWT (header.payload.signature) for testing."""
+        import base64
+        import json
+
+        def b64url(obj):
+            if isinstance(obj, str):
+                data = obj.encode("utf-8")
+            else:
+                data = json.dumps(obj).encode("utf-8")
+            return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+        header = b64url({"alg": "RS256", "typ": "JWT", "kid": "test-key-1"})
+        payload = b64url(claims)
+        signature = b64url("dummy-signature")
+        return f"{header}.{payload}.{signature}"
+
+    def _make_mock_jwks_client(self):
+        """Create a mock JWKS client returning a fake key for test-key-1."""
+        from app.auth.clerk import ClerkJwksClient
+
+        jwk = {
+            "kty": "RSA",
+            "kid": "test-key-1",
+            "use": "sig",
+            "alg": "RS256",
+            "n": "dummy-n",
+            "e": "AQAB",
+        }
+
+        class MockJwksClient(ClerkJwksClient):
+            async def get_signing_key(self, kid):
+                return jwk if kid == "test-key-1" else None
+
+        return MockJwksClient("https://clerk.example.com")
+
+    def test_verify_clerk_token_extracts_nested_o_claims(self):
+        """verify_clerk_token extracts org claims from nested 'o' object."""
+        from app.auth.clerk import verify_clerk_token
+        from unittest.mock import patch
+
+        # Token with nested 'o' claims (Clerk v2 format)
+        token = self._make_fake_token({
+            "sub": "user-1",
+            "iss": "https://clerk.example.com",
+            "exp": 9999999999,
+            "o": {
+                "id": "org-v2",
+                "rol": "org:admin",
+                "slg": "my-org",
+                "per": ["org:system_memberships:read"],
+            },
+        })
+
+        jwks_client = self._make_mock_jwks_client()
+
+        with patch("app.auth.clerk._verify_rs256", return_value=True):
+            user = _run_async(verify_clerk_token(
+                token=token,
+                issuer_url="https://clerk.example.com",
+                jwks_client=jwks_client,
+            ))
+
+        assert user.user_id == "user-1"
+        assert user.org_id == "org-v2"
+        assert user.org_role == "org:admin"
+        assert user.org_slug == "my-org"
+        assert "org:system_memberships:read" in user.org_permissions
+
+    def test_verify_clerk_token_top_level_takes_precedence(self):
+        """Top-level org claims take precedence over nested 'o' claims."""
+        from app.auth.clerk import verify_clerk_token
+        from unittest.mock import patch
+
+        # Token with both top-level and nested org claims
+        token = self._make_fake_token({
+            "sub": "user-1",
+            "iss": "https://clerk.example.com",
+            "exp": 9999999999,
+            "org_id": "org-top",
+            "org_role": "org:member",
+            "org_permissions": ["custom:read"],
+            "o": {
+                "id": "org-nested",
+                "rol": "org:admin",
+                "per": ["org:system_memberships:read"],
+            },
+        })
+
+        jwks_client = self._make_mock_jwks_client()
+
+        with patch("app.auth.clerk._verify_rs256", return_value=True):
+            user = _run_async(verify_clerk_token(
+                token=token,
+                issuer_url="https://clerk.example.com",
+                jwks_client=jwks_client,
+            ))
+
+        assert user.org_id == "org-top"
+        assert user.org_role == "org:member"
+        assert "custom:read" in user.org_permissions
+        assert "org:system_memberships:read" not in user.org_permissions

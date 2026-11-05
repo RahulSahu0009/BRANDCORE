@@ -226,12 +226,14 @@ class ClerkUser:
         org_role: str | None,
         org_permissions: list[str] | None,
         claims: dict[str, Any],
+        org_slug: str | None = None,
     ):
         self.user_id = user_id
         self.email = email
         self.org_id = org_id
         self.org_role = org_role
         self.org_permissions = org_permissions or []
+        self.org_slug = org_slug
         self.claims = claims
 
     @property
@@ -323,9 +325,26 @@ async def verify_clerk_token(
     email = unverified_claims.get("email")
 
     # Organization context from Clerk claims
+    # Clerk session tokens may carry org claims at the top level
+    # (legacy v1 format) or nested under an "o" object (v2 format).
+    # Check both, with top-level taking precedence.
     org_id = unverified_claims.get("org_id")
     org_role = unverified_claims.get("org_role")
     org_permissions = unverified_claims.get("org_permissions") or []
+    org_slug = unverified_claims.get("org_slug")
+
+    # Fall back to nested "o" object (Clerk v2 session token format)
+    org_claims = unverified_claims.get("o")
+    if isinstance(org_claims, dict):
+        org_id = org_id or org_claims.get("id")
+        org_role = org_role or org_claims.get("rol")
+        org_slug = org_slug or org_claims.get("slg")
+        nested_perms = org_claims.get("per") or []
+        if isinstance(nested_perms, list):
+            org_permissions = org_permissions or nested_perms
+        elif isinstance(nested_perms, str):
+            org_permissions = org_permissions or [nested_perms]
+
     if isinstance(org_permissions, str):
         org_permissions = [org_permissions]
 
@@ -336,6 +355,7 @@ async def verify_clerk_token(
         org_role=org_role,
         org_permissions=org_permissions,
         claims=unverified_claims,
+        org_slug=org_slug,
     )
 
 
