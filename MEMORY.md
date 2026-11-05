@@ -18,9 +18,9 @@
 
 ## Current State
 
-**Milestone:** M2 → M3 complete (M2-01 through M2-07, M3-01 through M3-05 VERIFIED)
-**Status:** Data foundation and claim analysis engine complete; 130/130 backend tests pass; migration 0004 applied to local D1 state
-**Last verified:** 2026-11-05 @ M3-05 VERIFIED; 130/130 backend tests pass; frontend build success
+**Milestone:** M2 → M3 complete (M2-01 through M2-07, M3-01 through M3-05 VERIFIED); Clerk authentication implemented (VERIFIED); UI redesign complete (UX-01 through UX-10 DONE)
+**Status:** Data foundation, claim analysis engine, Clerk authentication, and premium frontend UI all complete; 192/192 backend tests pass; migration 0004 applied to local D1 state; migration 0005 (workspace_org_mapping) created but not yet applied to local D1 state; frontend build success (122 modules)
+**Last verified:** 2026-11-05 @ UI redesign build success; 192/192 backend tests pass
 
 ---
 
@@ -29,7 +29,7 @@
 - Frontend: React + Vite + Tailwind CSS (JavaScript/JSX only) — built and served from Worker
 - Backend: Python 3.14 FastAPI on Cloudflare Python Workers — running locally via pywrangler
 - Worker entry point: `src/worker.py` — `Default = entrypoint(app)` pattern
-- App modules: `src/app/main.py`, `src/app/api/health.py`, `src/app/api/poc.py`, `src/app/api/dependencies.py`
+- App modules: `src/app/main.py`, `src/app/api/health.py`, `src/app/api/poc.py`, `src/app/api/dependencies.py`, `src/app/api/analyze.py`, `src/app/auth/clerk.py`, `src/app/auth/dependencies.py`
 - Vendored packages: `python_modules/` (431 modules, 9.4 MB) — managed by `pywrangler sync`
 - DB: Cloudflare D1 local simulation — `poc_records` table created, write/read verified
 - Storage: Cloudflare R2 local simulation — put/get verified with fixed POC key
@@ -73,8 +73,9 @@
 - [x] **M3-03 VERIFIED:** claim_stronger_than_evidence and missing_qualifier checks; strength mapping; qualifier required logic — part of 25 verification engine tests — 2026-11-05
 - [x] **M3-04 VERIFIED:** scope_mismatch, expired_offer (injectable clock), unapproved terminology (word-boundary) checks — part of 25 verification engine tests — 2026-11-05
 - [x] **M3-05 VERIFIED:** `POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze` in `src/app/api/analyze.py`; `AnalysisService` in `src/app/services/analysis_service.py` orchestrating fetch→extract→persist→verify→persist→dependencies→audit via atomic `db.batch()`; structured claims+findings response; workspace-scoped; error handling (404/400/422/502/500); analysis history preserved; registered in `src/app/main.py` — 7 integration tests pass; full suite 130/130 pass — 2026-11-05
+- [x] **Clerk Authentication (Phase 8):** `src/app/auth/clerk.py` — RS256 JWT verification via JWKS + `pow()` (Pyodide-compatible, stdlib only); `src/app/auth/dependencies.py` — workspace org → D1 workspace mapping + `require_workspace_access`/`require_workspace_permission` dependencies; `src/app/main.py` — analyze routes protected, health stays public; migration `0005_clerk_workspace_mapping.sql` created; 44 new auth tests (test_auth_clerk.py, test_workspace_auth.py, test_api_protection.py) — all pass; full suite 192/192 pass — 2026-11-05
 - [x] Frontend `npm run build`: success — 2026-11-05
-- [x] All 17 tests pass (M1 baseline); 44/44 pass (M2); 130/130 pass (M3 full regression) — 2026-11-05
+- [x] All 17 tests pass (M1 baseline); 44/44 pass (M2); 130/130 pass (M3 full regression); 192/192 pass (with Clerk auth) — 2026-11-05
 
 ---
 
@@ -93,9 +94,10 @@
 
 ## Tests & Checks Run
 
-- `uv run pytest backend/tests/ -v`: **20/20 passed** (M1 baseline, pytest 9.1.1, Python 3.14.6, 2026-11-04)
+- `uv run pytest backend/tests/ -v`: **20/20 passed** (M1 baseline, pytest 9.2.0, Python 3.14.6, 2026-11-04)
 - `uv run pytest backend/tests/ -v`: **44/44 passed** (M2-02 regression, pytest 9.2.0, Python 3.14.6, 2026-11-05)
 - `uv run pytest backend/tests/ -v`: **130/130 passed** (full M2+M3 regression, 2026-11-05) — includes 24 M2-02 schema tests, 25 M2-03 schema tests, seed tests, 14 M3-01 extraction tests, 25 M3-02→M3-04 verification tests, 7 M3-05 analysis tests, M2-05→M2-07 repo tests
+- `uv run pytest backend/tests/ -v`: **192/192 passed** (full suite with Clerk auth — test_auth_clerk.py, test_workspace_auth.py, test_api_protection.py, test_forensic_regression.py), 2026-11-05
 - `npx wrangler d1 migrations apply brandcore-db --local`: **0002 ✅ / 0003 ✅ / 0004 ✅** applied to local state (.wrangler/state/v3); re-apply is a tracker no-op
 - Rollback `0002_core_data_foundation_rollback.sql`: **6 commands ✅** — poc_records intact
 - Rollback `0003_content_claims_verification_rollback.sql`: **4 commands ✅** — M2-01 tables + poc_records intact
@@ -134,7 +136,7 @@ Gate B and Gate B-sub approved. `brandcore.workers.dev` registered.
 
 ## NEXT ACTION
 
-**Task:** Update M4/M5 UI milestones (owner Rahul / Arvind) or proceed to M6 integration; user decision required.
-**Branch:** `feature/mritunjay/data-foundation` (current; M2-01 commit `d0729e4` not yet pushed to origin/develop)
+**Task:** Proceed to M6 integration (replace mock APIs with real endpoints) or address blockers; user decision required.
+**Branch:** `feature/mritunjay/ui-redesign` (created from `feature/mritunjay/clerk-authentication` at `56c3e4b`; UI redesign + Clerk auth changes uncommitted; not yet pushed to origin/develop)
 
-*Last updated: 2026-11-05 — M2-01 through M2-07 and M3-01 through M3-05 VERIFIED; 130/130 backend tests pass; migration 0004 applied to local D1 state*
+*Last updated: 2026-11-05 — Clerk authentication implemented and verified; 192/192 backend tests pass; migration 0005 created but not yet applied to local D1 state*

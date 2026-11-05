@@ -2,39 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --canvas: #F5F7FA;
-  --surface: #FFFFFF;
-  --surface-muted: #EEF2F6;
-  --navy-950: #142235;
-  --navy-800: #203750;
-  --slate-700: #42556B;
-  --slate-600: #5C6D80;
-  --slate-500: #718197;
-  --border: #DCE3EA;
-  --teal-700: #147A72;
-  --teal-100: #DDF3EF;
-  --amber-700: #986000;
-  --amber-100: #FFF1CC;
-  --red-700: #B42318;
-  --red-100: #FEE4E2;
-  --green-700: #137547;
-  --green-100: #DDF5E7;
-  --text-primary: #162638;
-  --text-secondary: #5C6D80;
-  --focus-ring: #2563EB;
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-canvas text-text-primary;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  * {
+    @apply border-border;
+  }
 }
 
-body {
-  background-color: var(--canvas);
-  color: var(--text-primary);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+@layer components {
+  .focus-ring {
+    @apply focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:outline-none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
