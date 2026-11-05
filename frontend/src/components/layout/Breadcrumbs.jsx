@@ -2,6 +2,8 @@
  * BRANDCORE — Breadcrumbs
  * Navigation breadcrumb trail with separators.
  */
+import { Fragment } from 'react'
+
 export function Breadcrumbs({ items }) {
   if (!items || items.length === 0) {
     return null
@@ -12,7 +14,7 @@ export function Breadcrumbs({ items }) {
       {items.map((item, index) => {
         const isLast = index === items.length - 1
         return (
-          <React.Fragment key={item.label}>
+          <Fragment key={item.label}>
             {!isLast && (
               <>
                 <a
@@ -25,7 +27,7 @@ export function Breadcrumbs({ items }) {
               </>
             )}
             {isLast && <span className="text-text-primary">{item.label}</span>}
-          </React.Fragment>
+          </Fragment>
         )
       })}
     </nav>
