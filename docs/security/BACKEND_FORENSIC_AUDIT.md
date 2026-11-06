@@ -2,19 +2,19 @@
 
 **Audit date:** 2026-11-05
 **Auditor:** Mritunjay (principal backend engineer)
-**Branch:** `security/backend-forensic-hardening`
-**Baseline commit:** `129b8eb` (feature/mritunjay/data-foundation)
+**Branch:** `feature/mritunjay/clerk-authentication`
+**Baseline commit:** `56c3e4b` (feature/mritunjay/clerk-authentication)
 **Final commit:** pending local commits only (not pushed)
 
 ---
 
 ## Executive Verdict
 
-**CRITICAL ISSUES FOUND**
+**CRITICAL ISSUE F-00 RESOLVED**
 
-The backend is NOT safe for production deployment. The most severe finding is the complete absence of authentication and authorization on product API routes. Any caller can supply any `workspace_id` and access or analyze content in that workspace. Workspace-scoped SQL prevents cross-workspace data leakage at the database layer, but there is no user identity, no workspace membership check, and no authorization boundary on `POST /api/workspaces/{workspace_id}/content/{content_version_id}/analyze`.
+The backend previously had no authentication or authorization on product API routes. This has been resolved with Clerk authentication (RS256 JWT verification via JWKS) and workspace-level authorization (Clerk Organization → D1 workspace mapping). All product routes now require valid Clerk identity + active organization + matching workspace mapping.
 
-Per PRD §7 and RULES.md §11, production authentication is intentionally out of scope for Round 2. This is a documented blocker, not an oversight to be silently worked around.
+Per PRD §7 and RULES.md §11, production authentication was initially out of scope for Round 2 but has been implemented as a separately reviewed security feature on branch `feature/mritunjay/clerk-authentication`.
 
 ---
 
@@ -23,7 +23,7 @@ Per PRD §7 and RULES.md §11, production authentication is intentionally out of
 | Area | Inspected | Tested | Status |
 |------|-----------|--------|--------|
 | API routes (health, POC, analyze) | Yes | Yes | Complete |
-| Authentication / authorization | Yes | Partial | P0 blocker documented |
+| Authentication / authorization | Yes | Yes | Complete (Clerk RS256 + workspace mapping) |
 | SQL injection / D1 security | Yes | Yes | All queries parameterized |
 | Workers AI security | Yes | Yes | Fake binding, no remote calls |
 | R2 security | Yes | Yes | POC only, fixed key |
@@ -34,7 +34,7 @@ Per PRD §7 and RULES.md §11, production authentication is intentionally out of
 | Stale detection | Yes | Yes | Bug found and fixed |
 | Verification engine (7 finding types) | Yes | Yes | Bugs found and fixed |
 | Repository layer (14 repositories) | Yes | Yes | Complete |
-| Test suite | 130 original + 18 new | 148 total | All pass |
+| Test suite | 130 original + 18 forensic + 44 auth | 192 total | All pass |
 | Static analysis | No tools installed | N/A | Documented as gap |
 | Performance | Manual | Yes | 9ms for 1000 passports |
 
@@ -44,7 +44,7 @@ Per PRD §7 and RULES.md §11, production authentication is intentionally out of
 
 | ID | Severity | Component | Vulnerability/Defect | Reproduced | Fixed | Regression Test |
 |----|----------|-----------|---------------------|------------|-------|-----------------|
-| F-00 | P0 | `src/app/api/analyze.py` | No authentication or authorization on product analyze endpoint; any workspace_id accepted | Yes | No (architectural blocker) | N/A (documented) |
+| F-00 | P0 | `src/app/api/analyze.py` | No authentication or authorization on product analyze endpoint; any workspace_id accepted | Yes | Yes (Clerk auth implemented) | `test_auth_clerk.py`, `test_workspace_auth.py`, `test_api_protection.py` |
 | F-01 | P1 | `src/app/repositories/stale_detection_repo.py` | `find_stale_releases()` always returned empty (stub `_passport_stale_reason`) | Yes | Yes | `test_f01_*` |
 | F-02 | P2 | `src/app/services/verification_engine.py` | `_claim_strength` used substring matching ("all" matched "already") | Yes | Yes | `test_f02_*` |
 | F-03 | P2 | `src/app/services/verification_engine.py` | `_check_qualifier` used substring matching ("up to" could false-match) | Yes | Yes | `test_f03_*` |
@@ -65,27 +65,26 @@ Per PRD §7 and RULES.md §11, production authentication is intentionally out of
 
 ## Detailed Findings
 
-### F-00 — P0: No authentication on product routes
+### F-00 — P0: No authentication on product routes (RESOLVED)
 
-**File:** `src/app/api/analyze.py`, `src/app/main.py`
+**File:** `src/app/api/analyze.py`, `src/app/main.py`, `src/app/auth/clerk.py`, `src/app/auth/dependencies.py`
 **Category:** Missing authentication / authorization
 **Severity:** P0 — Critical
+**Status:** RESOLVED — Clerk authentication implemented on branch `feature/mritunjay/clerk-authentication`
 
-**Scenario:** An attacker (or any unauthenticated caller) sends `POST /api/workspaces/{arbitrary_workspace_id}/content/{content_version_id}/analyze`. There is no authentication check, no user identity, and no workspace membership verification. The caller can analyze content in any workspace they can guess the ID for.
+**Scenario:** An attacker (or any unauthenticated caller) sends `POST /api/workspaces/{arbitrary_workspace_id}/content/{content_version_id}/analyze`. There was no authentication check, no user identity, and no workspace membership verification.
 
-**Preconditions:** None — the endpoint is publicly reachable.
+**Fix:** Clerk RS256 JWT verification via JWKS (using stdlib `pow()` + SHA-256, Pyodide-compatible) + workspace-level authorization via `workspace_org_mapping` D1 table. All product routes require valid Clerk session + active organization + matching org→workspace mapping.
 
-**Reproduction:** Send a POST request to the analyze endpoint with any workspace_id. The request is processed if the content version exists in that workspace.
+**Files changed:**
+- `src/app/auth/clerk.py` — `ClerkJwksClient`, `ClerkUser`, `verify_clerk_token()`, `get_current_clerk_user` dependency
+- `src/app/auth/dependencies.py` — `WorkspaceOrgMappingRepository`, `require_workspace_access()`, `require_workspace_permission()`
+- `src/app/main.py` — analyze router protected with `require_workspace_access("workspace_id")`; health remains public
+- `database/migrations/0005_clerk_workspace_mapping.sql` — `workspace_org_mapping` table with UNIQUE constraints
 
-**Actual behavior:** Analysis proceeds for any workspace_id that contains the specified content version.
+**Regression tests:** `test_auth_clerk.py` (15 tests), `test_workspace_auth.py` (20 tests), `test_api_protection.py` (9 tests) — all pass
 
-**Root cause:** No authentication middleware or dependency is applied to the analyze router. `require_development_env` only guards POC routes, not product routes.
-
-**Fix:** Not implemented — production authentication is out of scope per PRD §7 ("Production authentication, enterprise SSO or advanced organization administration") and RULES.md §11 ("Do not implement production authentication casually").
-
-**Residual risk:** HIGH — any caller can analyze any workspace's content. Cross-workspace data exposure is partially mitigated by workspace-scoped SQL (content version lookup checks both workspace_id and content_version_id), but facts/evidence for any known workspace_id are accessible.
-
-**Required action:** Implement authentication and workspace-level authorization before production deployment. Create a separately reviewed security task per RULES.md §11.
+**Residual risk:** LOW — cross-workspace data exposure mitigated by workspace-scoped SQL + org→workspace mapping enforcement at the API layer.
 
 ---
 
@@ -287,7 +286,6 @@ Fixes implemented on branch `security/backend-forensic-hardening`:
 
 | ID | Severity | Impact | Why Unresolved | Remediation Required |
 |----|----------|--------|----------------|---------------------|
-| F-00 | P0 | Any caller can analyze any workspace's content | Production auth out of scope per PRD §7 | Implement authentication + workspace authorization; create separately reviewed security task |
 | F-13 | P4 | POC route makes billable AI call | POC by design | Remove POC routes before Milestone 2 product work |
 | F-14 | P4 | No automated static analysis | Tools not installed | Add `ruff` or `flake8` as dev dependency |
 | F-15 | P4 | Cannot deploy to remote Cloudflare | `<D1_DATABASE_ID>` placeholder | User approval to create D1 database and update `wrangler.jsonc` |
@@ -296,7 +294,7 @@ Fixes implemented on branch `security/backend-forensic-hardening`:
 
 ## Git Status
 
-- **Branch:** `security/backend-forensic-hardening`
-- **Starting commit:** `129b8eb`
-- **Working tree:** Clean (all changes committed locally)
+- **Branch:** `feature/mritunjay/clerk-authentication`
+- **Starting commit:** `56c3e4b`
+- **Working tree:** Modified (uncommitted changes: Clerk auth files, test files, config updates)
 - **Push status:** NOT pushed (per instructions, no push without explicit approval)

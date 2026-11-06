@@ -1,0 +1,1 @@
+# BRANDCORE — Clerk authentication module

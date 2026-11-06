@@ -16,6 +16,7 @@
 | R-05 | F-08 | `src/app/repositories/fact_repo.py` | Fixed `create()` SQL: 12 `?` placeholders matching 12 columns, all values parameterized | Column/placeholder mismatch (12 columns, 7 placeholders + 4 literals, 8 params) | Applied |
 | R-06 | F-12 | `src/app/services/analysis_service.py` | Removed dead `for c in claim_dicts: pass` and `for fd in finding_dicts: pass` loops | Dead code after atomic batch write | Applied |
 | R-07 | F-11 | `backend/tests/repository/test_m2_07_repos.py` | Removed duplicate `import sqlite3` (line 12) | Duplicate import | Applied |
+| R-08 | F-00 | `src/app/auth/clerk.py`, `src/app/auth/dependencies.py`, `src/app/main.py`, `database/migrations/0005_clerk_workspace_mapping.sql` | Implemented Clerk RS256 JWT verification via JWKS + workspace org→D1 workspace mapping authorization; analyze routes protected; health remains public | No authentication/authorization on product routes | Applied |
 
 ---
 
@@ -23,7 +24,6 @@
 
 | Finding | Reason |
 |---------|--------|
-| F-00 (No auth on product routes) | Production authentication out of scope per PRD §7; requires separately reviewed security task |
 | F-13 (POC makes real AI call) | POC route by design; will be removed before Milestone 2 |
 | F-14 (No static analysis tools) | Tools not installed; documented as gap for future |
 | F-15 (D1 ID placeholder) | Requires user approval to create D1 database |
@@ -32,7 +32,8 @@
 
 ## Verification
 
-- All 148 tests pass (130 original + 18 new forensic regression tests)
+- All 192 tests pass (130 original + 18 forensic regression + 44 Clerk auth)
 - All backend Python files compile successfully via `py_compile`
 - Migration 0004 applied and rollback-tested against local D1 state
+- Migration 0005 (workspace_org_mapping) created but not yet applied to local D1 state
 - No frontend files modified

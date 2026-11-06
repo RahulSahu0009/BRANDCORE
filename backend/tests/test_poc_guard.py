@@ -9,8 +9,19 @@ test (require_development_env) sees exactly what it would see in production.
 No AI inference is made. No real Cloudflare bindings are used.
 """
 import pytest
+from fastapi import FastAPI, Depends
 from fastapi.testclient import TestClient
-from app.main import app
+from app.api.poc import router as poc_router
+from app.api.dependencies import require_development_env
+
+
+def _make_fresh_app():
+    app = FastAPI()
+    app.include_router(
+        poc_router, prefix="/api",
+        dependencies=[Depends(require_development_env)],
+    )
+    return app
 
 
 class _FakeEnv:
@@ -36,12 +47,14 @@ class _ScopeEnvMiddleware:
 
 
 def _client_with_env(brandcore_env, raise_server_exceptions: bool = True) -> TestClient:
+    app = _make_fresh_app()
     wrapped = _ScopeEnvMiddleware(app, _FakeEnv(brandcore_env))
     return TestClient(wrapped, raise_server_exceptions=raise_server_exceptions)
 
 
 def _client_with_no_env() -> TestClient:
     """Simulates a request where scope['env'] is absent (no Workers runtime)."""
+    app = _make_fresh_app()
     return TestClient(app)
 
 

@@ -71,7 +71,8 @@
   // .dev.vars takes precedence over vars in `wrangler dev` for secrets/vars.
   // See .dev.vars.example for the required variable name.
   "vars": {
-    "BRANDCORE_ENV": "disabled"
+    "BRANDCORE_ENV": "disabled",
+    "CLERK_ISSUER_URL": "<CLERK_ISSUER_URL>"
   },
 
   // Environment-specific overrides
@@ -79,7 +80,8 @@
     "development": {
       "name": "brandcore-worker-dev",
       "vars": {
-        "BRANDCORE_ENV": "development"
+        "BRANDCORE_ENV": "development",
+        "CLERK_ISSUER_URL": "<CLERK_ISSUER_URL>"
       },
       // Development environment must redeclare all bindings — Wrangler does not
       // inherit top-level bindings into named environments.
