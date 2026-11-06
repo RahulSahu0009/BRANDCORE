@@ -3,11 +3,11 @@
  * Application header with brand, workspace context, backend status, theme toggle,
  * and user controls. Uses Clerk for authentication.
  */
-import { Show, UserButton, OrganizationSwitcher, useAuth } from '@clerk/react'
+import { UserButton, OrganizationSwitcher, useAuth } from '@clerk/react'
 import { ThemeToggle } from '../ui/theme/ThemeToggle'
 
 export function TopBar({ workspace, backendStatus, onSidebarToggle, isSidebarOpen }) {
-  const { isSignedIn, isLoaded } = useAuth()
+  const { isSignedIn } = useAuth()
 
   return (
     <header

@@ -7,7 +7,6 @@ import React, { useEffect, useState } from 'react'
 import { useAuth, useClerk } from '@clerk/react'
 import { api, onBackendStatusChange } from './services/api.js'
 import { AppShell } from './components/layout/AppShell'
-import { ThemeToggle } from './components/ui/theme/ThemeToggle'
 import { Button } from './components/ui/Button'
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext'
 import ApprovedFactsPage from './features/brand-governance/ApprovedFactsPage'
@@ -16,14 +15,6 @@ import OverviewPage from './features/brand-governance/OverviewPage'
 import ReleaseGovernancePage from './features/release-governance/ReleaseGovernancePage'
 import ContentReviewPage from './features/content-review/ContentReviewPage'
 import { WorkspaceOnboarding } from './components/WorkspaceOnboarding'
-
-const PAGES = [
-  { id: 'overview', label: 'Overview', owner: 'Shared' },
-  { id: 'facts', label: 'Approved Facts', owner: 'Arvind' },
-  { id: 'content', label: 'Content Review', owner: 'Rahul' },
-  { id: 'releases', label: 'Releases', owner: 'Arvind' },
-  { id: 'evidence', label: 'Evidence Library', owner: 'Arvind' },
-]
 
 const PAGE_COMPONENTS = {
   overview: OverviewPage,
