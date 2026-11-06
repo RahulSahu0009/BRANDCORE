@@ -157,3 +157,20 @@
 - Workspace isolation is enforced at the DB level, not only in application code.
 - The conceptual single `evidence_id` column shown in the earlier architecture sketch is superseded by this join table.
 - Repository queries for "all evidence supporting a fact" use a simple join on `fact_evidence`.
+
+## ADR-010 — Clerk authentication with PyJWT + cryptography for JWT verification
+
+**Date:** 2026-11-05
+**Status:** Accepted
+**Deciders:** Mritunjay Singh (Team Lead)
+
+**Context:** BRANDCORE needs production authentication on product API routes (finding F-00). The backend runs on Cloudflare Python Workers (Pyodide CPython 3.14). No JWT library is vendored in `python_modules/`. The Clerk official Python SDK does not exist (Clerk maintains Node.js, Go, etc. but not Python). We need to verify Clerk-issued JWTs (RS256) using JWKS from the Clerk instance.
+
+**Decision:** Add `pyjwt>=2.15.1` and `cryptography>=50.0.2` as backend dependencies. Use PyJWT with `cryptography` backend for RS256 signature verification. Fetch Clerk JWKS from `https://<CLERK_ISSUER_URL>/.well-known/jwks.json` with bounded caching. Verify `iss`, `exp`, `nbf`, `azp`, `alg` restrictions, and extract `sub`, `org_id`, `org_role`, `permissions`.
+
+**Consequences:**
+- Two new dependencies require `uv sync` and `pywrangler sync` to vendor into `python_modules/`
+- `CLERK_ISSUER_URL` must be set in `.dev.vars` (gitignored) for local development
+- No custom cryptographic primitives — PyJWT + cryptography are maintained libraries
+- JWKS fetching uses Cloudflare Workers `fetch()` (available in Python Workers runtime)
+- Clerk secret key is NOT needed for JWT verification (JWKS contains public keys)

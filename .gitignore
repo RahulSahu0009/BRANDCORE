@@ -32,6 +32,8 @@ build/
 
 # Cloudflare
 .wrangler/
+.wrangler-local-state/
+wrangler.local.jsonc
 
 # Editor
 .vscode/

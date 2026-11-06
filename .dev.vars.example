@@ -10,6 +10,11 @@
 
 BRANDCORE_ENV=development
 
+# Clerk authentication — set from Clerk Dashboard (Development instance)
+# CLERK_ISSUER_URL=https://clerk.<instance>.clerk.accounts.dev
+# Obtain from: Clerk Dashboard → Domain settings → Development domain
+CLERK_ISSUER_URL=
+
 # Add further secret variable names here as they are needed.
 # Example (do not use real values):
 # SOME_API_KEY=<your-api-key-here>
