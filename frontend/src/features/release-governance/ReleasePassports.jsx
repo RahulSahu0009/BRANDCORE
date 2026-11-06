@@ -27,7 +27,7 @@ function PassportBadge({ status }) {
     revoked: { dot: 'bg-[#f66]',    text: 'text-[#f66]',    bg: 'bg-[rgba(255,102,102,0.1)]',  border: 'border-[rgba(255,102,102,0.2)]',  label: 'Revoked' },
     invalid: { dot: 'bg-[#f66]',    text: 'text-[#f66]',    bg: 'bg-[rgba(255,102,102,0.1)]',  border: 'border-[rgba(255,102,102,0.2)]',  label: 'Invalid' },
   }
-  const s = map[status] ?? { dot: 'bg-[#6b6b6b]', text: 'text-[#6b6b6b]', bg: 'bg-[rgba(107,107,107,0.1)]', border: 'border-[rgba(107,107,107,0.2)]', label: status }
+  const s = map[status] ?? { dot: 'bg-[#6b6b6b]', text: 'text-white', bg: 'bg-[rgba(107,107,107,0.1)]', border: 'border-[rgba(107,107,107,0.2)]', label: status }
   return (
     <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border ${s.bg} ${s.text} ${s.border}`}>
       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
@@ -118,11 +118,11 @@ function StaleImpactPanel({ releaseId, onClose }) {
       {state === 'error'   && <p role="alert" className="text-[12px] text-[#f66]">{error}</p>}
       {state === 'ready' && impact && (
         <dl className="grid grid-cols-[130px_1fr] gap-x-4 gap-y-2">
-          <dt className="text-[11px] text-[#6b6b6b] font-medium self-start pt-0.5">Reason</dt>
+          <dt className="text-[11px] text-white font-medium self-start pt-0.5">Reason</dt>
           <dd className="text-[12px] text-[#a1a1a1]">{impact.stale_reason}</dd>
-          <dt className="text-[11px] text-[#6b6b6b] font-medium">Stale since</dt>
+          <dt className="text-[11px] text-white font-medium">Stale since</dt>
           <dd className="text-[12px] text-[#a1a1a1]">{formatDateTime(impact.stale_since)}</dd>
-          <dt className="text-[11px] text-[#6b6b6b] font-medium">Revalidation</dt>
+          <dt className="text-[11px] text-white font-medium">Revalidation</dt>
           <dd className="text-[12px]">
             {impact.revalidation_required
               ? <span className="inline-flex items-center gap-1.5 text-[#f5a623] font-medium"><span className="w-1.5 h-1.5 rounded-full bg-[#f5a623]" />Required</span>
@@ -160,7 +160,7 @@ export default function ReleasePassports() {
     <section aria-label="Release Passports">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[18px] font-semibold text-[#ededed] tracking-tight">Release Passports</h1>
+          <h1 className="text-[18px] font-semibold text-white tracking-tight">Release Passports</h1>
           <p className="text-[12px] text-[#4a4a4a] mt-0.5">Lumora Skincare · Demo workspace</p>
         </div>
       </div>
@@ -175,12 +175,12 @@ export default function ReleasePassports() {
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="bg-[#1a1a1a] border-b border-[#2e2e2e]">
-                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Passport ID</th>
-                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Content version</th>
-                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Hash</th>
-                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Approved by</th>
-                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em] whitespace-nowrap">Approved at</th>
-                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Status</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-white uppercase tracking-[0.07em]">Passport ID</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-white uppercase tracking-[0.07em]">Content version</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-white uppercase tracking-[0.07em]">Hash</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-white uppercase tracking-[0.07em]">Approved by</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-white uppercase tracking-[0.07em] whitespace-nowrap">Approved at</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-white uppercase tracking-[0.07em]">Status</th>
                   <th scope="col" className="px-4 py-2.5 w-28"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
@@ -192,7 +192,7 @@ export default function ReleasePassports() {
                         <span className="font-mono text-[11px] text-[#a1a1a1] bg-[#262626] px-1.5 py-0.5 rounded border border-[#2e2e2e]">{release.id}</span>
                       </td>
                       <td className="px-4 py-3 align-middle">
-                        <span className="font-mono text-[12px] text-[#6b6b6b]">{release.content_version_id}</span>
+                        <span className="font-mono text-[12px] text-white">{release.content_version_id}</span>
                       </td>
                       <td className="px-4 py-3 align-middle">
                         <span className="font-mono text-[11px] text-[#4a4a4a] bg-[#262626] px-1.5 py-0.5 rounded border border-[#2e2e2e] cursor-default" title={release.content_sha256}>
@@ -203,7 +203,7 @@ export default function ReleasePassports() {
                         <span className="block text-[#ededed] text-[13px] font-medium leading-none">{release.approver_id}</span>
                         <span className="text-[11px] text-[#4a4a4a] mt-0.5 block">{release.approver_role}</span>
                       </td>
-                      <td className="px-4 py-3 align-middle text-[#6b6b6b] text-[12px] whitespace-nowrap">{formatDate(release.approved_at)}</td>
+                      <td className="px-4 py-3 align-middle text-white text-[12px] whitespace-nowrap">{formatDate(release.approved_at)}</td>
                       <td className="px-4 py-3 align-middle"><PassportBadge status={release.status} /></td>
                       <td className="px-4 py-3 align-middle text-right">
                         {release.status === 'stale' && (
