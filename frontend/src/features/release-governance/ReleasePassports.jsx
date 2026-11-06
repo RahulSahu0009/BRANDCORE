@@ -5,46 +5,45 @@ import { mockGetReleases, mockGetStaleImpact } from './__mocks__/releases.js'
 
 function formatDate(iso) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  })
+  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function formatDateTime(iso) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
+  return new Date(iso).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function shortHash(hash) {
   if (!hash) return '—'
-  return hash.slice(0, 12) + '…'
+  return hash.slice(0, 10) + '…'
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Status badge ──────────────────────────────────────────────────────────────
 
-function PassportStatusBadge({ status }) {
+function PassportBadge({ status }) {
   const map = {
-    valid:    { bg: 'bg-[#DDF5E7]', text: 'text-[#137547]', label: 'VALID' },
-    stale:    { bg: 'bg-[#FFF1CC]', text: 'text-[#986000]', label: 'STALE' },
-    revoked:  { bg: 'bg-[#FEE4E2]', text: 'text-[#B42318]', label: 'REVOKED' },
-    invalid:  { bg: 'bg-[#FEE4E2]', text: 'text-[#B42318]', label: 'INVALID' },
+    valid:   { dot: 'bg-[#3ecf8e]', text: 'text-[#3ecf8e]', bg: 'bg-[rgba(62,207,142,0.1)]',   border: 'border-[rgba(62,207,142,0.2)]',   label: 'Valid' },
+    stale:   { dot: 'bg-[#f5a623]', text: 'text-[#f5a623]', bg: 'bg-[rgba(245,166,35,0.1)]',   border: 'border-[rgba(245,166,35,0.2)]',   label: 'Stale' },
+    revoked: { dot: 'bg-[#f66]',    text: 'text-[#f66]',    bg: 'bg-[rgba(255,102,102,0.1)]',  border: 'border-[rgba(255,102,102,0.2)]',  label: 'Revoked' },
+    invalid: { dot: 'bg-[#f66]',    text: 'text-[#f66]',    bg: 'bg-[rgba(255,102,102,0.1)]',  border: 'border-[rgba(255,102,102,0.2)]',  label: 'Invalid' },
   }
-  const s = map[status] ?? { bg: 'bg-[#EEF2F6]', text: 'text-[#42556B]', label: status.toUpperCase() }
+  const s = map[status] ?? { dot: 'bg-[#6b6b6b]', text: 'text-[#6b6b6b]', bg: 'bg-[rgba(107,107,107,0.1)]', border: 'border-[rgba(107,107,107,0.2)]', label: status }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border ${s.bg} ${s.text} ${s.border}`}>
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`} />
       {s.label}
     </span>
   )
 }
 
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
 function Skeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading releases" className="flex flex-col gap-2">
+    <div className="border border-[#2e2e2e] rounded-lg overflow-hidden">
+      <div className="h-9 bg-[#1a1a1a] border-b border-[#2e2e2e]" />
       {[1, 2, 3, 4].map((n) => (
-        <div key={n} className="h-12 rounded bg-[#EEF2F6] animate-pulse" />
+        <div key={n} className="h-11 border-b border-[#1f1f1f] bg-[#1c1c1c] animate-pulse" style={{ animationDelay: `${(n-1)*60}ms` }} />
       ))}
     </div>
   )
@@ -52,28 +51,29 @@ function Skeleton() {
 
 function ErrorBanner({ message, onRetry }) {
   return (
-    <div role="alert" className="flex items-start gap-3 px-4 py-3 rounded bg-[#FEE4E2] border border-[#B42318]/20">
-      <span className="text-[#B42318] text-sm font-medium shrink-0">Error</span>
-      <span className="text-sm text-[#B42318] flex-1">{message}</span>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="text-xs text-[#B42318] underline underline-offset-2 shrink-0 focus-visible:outline-2 focus-visible:outline-[#2563EB] rounded"
-        >
-          Retry
-        </button>
-      )}
+    <div role="alert" className="flex items-start gap-3 px-4 py-3 rounded-lg bg-[rgba(255,102,102,0.08)] border border-[rgba(255,102,102,0.2)]">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[#f66] shrink-0 mt-0.5" aria-hidden="true">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.3"/>
+        <path d="M7 4.5v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        <circle cx="7" cy="9.5" r="0.7" fill="currentColor"/>
+      </svg>
+      <span className="text-[12px] text-[#f66] flex-1">{message}</span>
+      {onRetry && <button onClick={onRetry} className="text-[11px] text-[#f66] underline underline-offset-2 shrink-0 hover:no-underline">Retry</button>}
     </div>
   )
 }
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 border border-dashed border-[#DCE3EA] rounded bg-white">
-      <p className="text-sm font-medium text-[#42556B]">No release passports yet</p>
-      <p className="text-xs text-[#718197] mt-1">
-        Passports are created when a reviewer approves a content version.
-      </p>
+    <div className="flex flex-col items-center justify-center py-16 border border-dashed border-[#2e2e2e] rounded-lg bg-[#1c1c1c]">
+      <div className="w-10 h-10 rounded-lg bg-[#262626] flex items-center justify-center mb-3">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-[#4a4a4a]" aria-hidden="true">
+          <circle cx="9" cy="9" r="6.5" stroke="currentColor" strokeWidth="1.3"/>
+          <path d="M9 6v3.5l2.5 1.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+        </svg>
+      </div>
+      <p className="text-[13px] font-medium text-[#a1a1a1]">No release passports</p>
+      <p className="text-[12px] text-[#4a4a4a] mt-1 text-center max-w-xs">Passports are created when a reviewer approves a content version.</p>
     </div>
   )
 }
@@ -81,9 +81,9 @@ function EmptyState() {
 // ── Stale impact panel ────────────────────────────────────────────────────────
 
 function StaleImpactPanel({ releaseId, onClose }) {
-  const [state, setState] = useState('loading') // 'loading' | 'ready' | 'error'
+  const [state, setState]   = useState('loading')
   const [impact, setImpact] = useState(null)
-  const [error, setError] = useState(null)
+  const [error, setError]   = useState(null)
 
   useEffect(() => {
     setState('loading')
@@ -93,44 +93,42 @@ function StaleImpactPanel({ releaseId, onClose }) {
   }, [releaseId])
 
   return (
-    <div className="mt-3 border border-[#DCE3EA] rounded bg-[#F5F7FA] p-4">
+    <div className="mx-4 my-2 border border-[rgba(245,166,35,0.2)] rounded-lg bg-[rgba(245,166,35,0.04)] p-4">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-[#42556B]">Stale impact</span>
+        <div className="flex items-center gap-2">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
+            <path d="M6.5 1.5L11.5 10.5H1.5L6.5 1.5z" stroke="#f5a623" strokeWidth="1.2" strokeLinejoin="round"/>
+            <path d="M6.5 5v2.5" stroke="#f5a623" strokeWidth="1.2" strokeLinecap="round"/>
+            <circle cx="6.5" cy="9" r="0.6" fill="#f5a623"/>
+          </svg>
+          <span className="text-[11px] font-semibold text-[#f5a623] uppercase tracking-[0.08em]">Stale Impact</span>
+        </div>
         <button
           onClick={onClose}
           aria-label="Close stale impact"
-          className="text-xs text-[#718197] hover:text-[#42556B] focus-visible:outline-2 focus-visible:outline-[#2563EB] rounded"
+          className="w-6 h-6 flex items-center justify-center rounded text-[#4a4a4a] hover:text-[#a1a1a1] hover:bg-[#262626] transition-colors"
         >
-          ✕
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
         </button>
       </div>
 
-      {state === 'loading' && (
-        <div aria-busy="true" aria-label="Loading stale impact" className="h-8 rounded bg-[#EEF2F6] animate-pulse" />
-      )}
-
-      {state === 'error' && (
-        <p role="alert" className="text-xs text-[#B42318]">{error}</p>
-      )}
-
+      {state === 'loading' && <div className="h-7 rounded bg-[rgba(245,166,35,0.08)] animate-pulse" />}
+      {state === 'error'   && <p role="alert" className="text-[12px] text-[#f66]">{error}</p>}
       {state === 'ready' && impact && (
-        <dl className="flex flex-col gap-2 text-sm">
-          <div className="flex gap-2">
-            <dt className="text-xs text-[#718197] w-32 shrink-0">Reason</dt>
-            <dd className="text-xs text-[#162638]">{impact.stale_reason}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="text-xs text-[#718197] w-32 shrink-0">Stale since</dt>
-            <dd className="text-xs text-[#162638]">{formatDateTime(impact.stale_since)}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="text-xs text-[#718197] w-32 shrink-0">Revalidation</dt>
-            <dd className="text-xs">
-              {impact.revalidation_required
-                ? <span className="text-[#986000] font-medium">Required</span>
-                : <span className="text-[#718197]">Not required</span>}
-            </dd>
-          </div>
+        <dl className="grid grid-cols-[130px_1fr] gap-x-4 gap-y-2">
+          <dt className="text-[11px] text-[#6b6b6b] font-medium self-start pt-0.5">Reason</dt>
+          <dd className="text-[12px] text-[#a1a1a1]">{impact.stale_reason}</dd>
+          <dt className="text-[11px] text-[#6b6b6b] font-medium">Stale since</dt>
+          <dd className="text-[12px] text-[#a1a1a1]">{formatDateTime(impact.stale_since)}</dd>
+          <dt className="text-[11px] text-[#6b6b6b] font-medium">Revalidation</dt>
+          <dd className="text-[12px]">
+            {impact.revalidation_required
+              ? <span className="inline-flex items-center gap-1.5 text-[#f5a623] font-medium"><span className="w-1.5 h-1.5 rounded-full bg-[#f5a623]" />Required</span>
+              : <span className="text-[#4a4a4a]">Not required</span>
+            }
+          </dd>
         </dl>
       )}
     </div>
@@ -140,14 +138,13 @@ function StaleImpactPanel({ releaseId, onClose }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ReleasePassports() {
-  const [releases, setReleases] = useState([])
-  const [loadState, setLoadState] = useState('loading')
-  const [loadError, setLoadError] = useState(null)
+  const [releases, setReleases]     = useState([])
+  const [loadState, setLoadState]   = useState('loading')
+  const [loadError, setLoadError]   = useState(null)
   const [expandedId, setExpandedId] = useState(null)
 
   function load() {
-    setLoadState('loading')
-    setLoadError(null)
+    setLoadState('loading'); setLoadError(null)
     mockGetReleases()
       .then(({ releases: data }) => { setReleases(data); setLoadState('ready') })
       .catch((err) => { setLoadError(err.message ?? 'Failed to load releases.'); setLoadState('error') })
@@ -161,110 +158,86 @@ export default function ReleasePassports() {
 
   return (
     <section aria-label="Release Passports">
-      <h1 className="text-xl font-bold text-[#162638] mb-4">Releases</h1>
       <div className="flex items-center justify-between mb-5">
-        <p className="text-xs text-[#718197]">Lumora Skincare · Demo workspace</p>
+        <div>
+          <h1 className="text-[18px] font-semibold text-[#ededed] tracking-tight">Release Passports</h1>
+          <p className="text-[12px] text-[#4a4a4a] mt-0.5">Lumora Skincare · Demo workspace</p>
+        </div>
       </div>
 
       {loadState === 'loading' && <Skeleton />}
-
-      {loadState === 'error' && (
-        <ErrorBanner message={loadError} onRetry={load} />
-      )}
-
-      {loadState === 'ready' && releases.length === 0 && <EmptyState />}
+      {loadState === 'error'   && <ErrorBanner message={loadError} onRetry={load} />}
+      {loadState === 'ready'   && releases.length === 0 && <EmptyState />}
 
       {loadState === 'ready' && releases.length > 0 && (
-        <div className="bg-white border border-[#DCE3EA] rounded overflow-hidden overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b border-[#DCE3EA] bg-[#F5F7FA]">
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[#42556B]">
-                  Passport ID
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[#42556B]">
-                  Content version
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[#42556B]">
-                  Content hash
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[#42556B]">
-                  Approved by
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[#42556B]">
-                  Approved at
-                </th>
-                <th scope="col" className="text-left px-4 py-3 text-xs font-medium text-[#42556B]">
-                  Status
-                </th>
-                <th scope="col" className="px-4 py-3 text-xs font-medium text-[#42556B] text-right">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {releases.map((release, idx) => (
-                <React.Fragment key={release.id}>
-                  <tr className={`border-b border-[#DCE3EA] ${expandedId === release.id ? '' : 'last:border-0'} ${idx % 2 === 0 ? 'bg-white' : 'bg-[#F5F7FA]'}`}>
-                    <td className="px-4 py-3 text-[#162638] align-top">
-                      <span className="font-mono text-xs">{release.id}</span>
-                    </td>
-                    <td className="px-4 py-3 text-[#42556B] align-top">
-                      <span className="font-mono text-xs">{release.content_version_id}</span>
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <span
-                        className="font-mono text-xs text-[#42556B]"
-                        title={release.content_sha256}
-                      >
-                        {shortHash(release.content_sha256)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#42556B] align-top">
-                      <span className="block">{release.approver_id}</span>
-                      <span className="text-xs text-[#718197]">{release.approver_role}</span>
-                    </td>
-                    <td className="px-4 py-3 text-[#42556B] align-top whitespace-nowrap">
-                      {formatDate(release.approved_at)}
-                    </td>
-                    <td className="px-4 py-3 align-top">
-                      <PassportStatusBadge status={release.status} />
-                    </td>
-                    <td className="px-4 py-3 align-top text-right">
-                      {release.status === 'stale' && (
-                        <button
-                          onClick={() => toggleStaleImpact(release.id)}
-                          aria-expanded={expandedId === release.id}
-                          aria-controls={`stale-panel-${release.id}`}
-                          className="text-xs text-[#986000] hover:underline focus-visible:outline-2 focus-visible:outline-[#2563EB] rounded"
-                        >
-                          {expandedId === release.id ? 'Hide impact' : 'View impact'}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                  {expandedId === release.id && (
-                    <tr className={idx % 2 === 0 ? 'bg-white' : 'bg-[#F5F7FA]'}>
-                      <td
-                        colSpan={7}
-                        id={`stale-panel-${release.id}`}
-                        className="px-4 pb-4"
-                      >
-                        <StaleImpactPanel
-                          releaseId={release.id}
-                          onClose={() => setExpandedId(null)}
-                        />
+        <div className="border border-[#2e2e2e] rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="bg-[#1a1a1a] border-b border-[#2e2e2e]">
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Passport ID</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Content version</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Hash</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Approved by</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em] whitespace-nowrap">Approved at</th>
+                  <th scope="col" className="text-left px-4 py-2.5 text-[11px] font-medium text-[#6b6b6b] uppercase tracking-[0.07em]">Status</th>
+                  <th scope="col" className="px-4 py-2.5 w-28"><span className="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                {releases.map((release, i) => (
+                  <React.Fragment key={release.id}>
+                    <tr className={`border-b border-[#1f1f1f] hover:bg-[#1a1a1a] transition-colors duration-75 group ${i === releases.length - 1 && expandedId !== release.id ? 'border-b-0' : ''} ${release.status === 'stale' ? 'bg-[rgba(245,166,35,0.02)]' : 'bg-[#1c1c1c]'}`}>
+                      <td className="px-4 py-3 align-middle">
+                        <span className="font-mono text-[11px] text-[#a1a1a1] bg-[#262626] px-1.5 py-0.5 rounded border border-[#2e2e2e]">{release.id}</span>
+                      </td>
+                      <td className="px-4 py-3 align-middle">
+                        <span className="font-mono text-[12px] text-[#6b6b6b]">{release.content_version_id}</span>
+                      </td>
+                      <td className="px-4 py-3 align-middle">
+                        <span className="font-mono text-[11px] text-[#4a4a4a] bg-[#262626] px-1.5 py-0.5 rounded border border-[#2e2e2e] cursor-default" title={release.content_sha256}>
+                          {shortHash(release.content_sha256)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 align-middle">
+                        <span className="block text-[#ededed] text-[13px] font-medium leading-none">{release.approver_id}</span>
+                        <span className="text-[11px] text-[#4a4a4a] mt-0.5 block">{release.approver_role}</span>
+                      </td>
+                      <td className="px-4 py-3 align-middle text-[#6b6b6b] text-[12px] whitespace-nowrap">{formatDate(release.approved_at)}</td>
+                      <td className="px-4 py-3 align-middle"><PassportBadge status={release.status} /></td>
+                      <td className="px-4 py-3 align-middle text-right">
+                        {release.status === 'stale' && (
+                          <button
+                            onClick={() => toggleStaleImpact(release.id)}
+                            aria-expanded={expandedId === release.id}
+                            aria-controls={`stale-panel-${release.id}`}
+                            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#f5a623] hover:text-[#e09010] px-2 py-1 rounded hover:bg-[rgba(245,166,35,0.1)] transition-colors"
+                          >
+                            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+                              <path d="M5.5 1L10 9.5H1L5.5 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                              <path d="M5.5 4.5v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                              <circle cx="5.5" cy="8" r="0.5" fill="currentColor"/>
+                            </svg>
+                            {expandedId === release.id ? 'Hide' : 'View impact'}
+                          </button>
+                        )}
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-          <div className="px-4 py-2 border-t border-[#DCE3EA] bg-[#F5F7FA]">
-            <span className="text-xs text-[#718197]">
-              {releases.length} {releases.length === 1 ? 'passport' : 'passports'}
-            </span>
+                    {expandedId === release.id && (
+                      <tr className="bg-[rgba(245,166,35,0.02)] border-b border-[#1f1f1f]">
+                        <td colSpan={7} id={`stale-panel-${release.id}`} className="py-1">
+                          <StaleImpactPanel releaseId={release.id} onClose={() => setExpandedId(null)} />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2 bg-[#1a1a1a] border-t border-[#2e2e2e] flex items-center justify-between">
+            <span className="text-[11px] text-[#4a4a4a]">{releases.length} {releases.length === 1 ? 'passport' : 'passports'}</span>
+            <span className="text-[11px] text-[#3d3d3d]">Lumora Skincare · Demo workspace</span>
           </div>
         </div>
       )}
