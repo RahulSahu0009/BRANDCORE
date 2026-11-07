@@ -16,7 +16,6 @@ import {
   FormField, FormInput, FormTextarea, FormSelect,
 } from '@/components/ui'
 import { PageHeader } from '@/components/layout'
-import { DEMO_FACTS, DEMO_WORKSPACE } from './__mocks__/demo-data'
 
 function formatDate(isoString) {
   if (!isoString) return '—'
@@ -58,10 +57,8 @@ export default function ApprovedFactsPage() {
         setError('Workspace not found.')
         setDemoMode(false)
       } else {
-        // Backend endpoint not yet implemented — fall back to clearly labeled demo data
-        setDemoMode(true)
-        setFacts(DEMO_FACTS)
-        setError(null)
+        setDemoMode(false)
+        setError(err.message || 'Unable to load approved facts.')
       }
     } finally {
       setLoading(false)
@@ -98,7 +95,8 @@ export default function ApprovedFactsPage() {
 
     try {
       if (editingFact) {
-        setDemoMode(true)
+        const result = await api.updateFact(workspaceId, editingFact.id, factData)
+        setFacts(facts.map((fact) => fact.id === result.id ? result : fact))
       } else {
         const result = await api.createFact(workspaceId, factData)
         setFacts([result, ...facts])
@@ -111,10 +109,9 @@ export default function ApprovedFactsPage() {
           ? 'Session expired. Please sign in again.'
           : 'You do not have access to this workspace.')
       } else {
-        setDemoMode(true)
+        setDemoMode(false)
+        setError(err.message || 'Unable to save the fact.')
       }
-      handleCloseForm()
-      fetchFacts()
     }
   }
 
@@ -176,7 +173,7 @@ export default function ApprovedFactsPage() {
               !
             </div>
             <div>
-              <p className="text-sm font-medium text-amber-700">Demo mode — backend facts endpoint not yet implemented</p>
+              <p className="text-sm font-medium text-amber-700">Demo mode — changes are not persisted</p>
               <p className="text-xs text-amber-600 mt-1">
                 Displaying fictional demo data. No changes are persisted to the backend.
               </p>

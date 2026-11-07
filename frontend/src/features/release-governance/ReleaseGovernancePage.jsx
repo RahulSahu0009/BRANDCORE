@@ -146,7 +146,7 @@ export default function ReleaseGovernancePage() {
               !
             </div>
             <div>
-              <p className="text-sm font-medium text-amber-700">Demo mode — release endpoints not yet implemented</p>
+              <p className="text-sm font-medium text-amber-700">Demo mode — changes are not persisted</p>
               <p className="text-xs text-amber-600 mt-1">
                 Displaying fictional demo data. No changes are persisted to the backend.
               </p>

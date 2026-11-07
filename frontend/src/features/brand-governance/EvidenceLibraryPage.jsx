@@ -16,7 +16,6 @@ import {
   FormField, FormInput, FormSelect,
 } from '@/components/ui'
 import { PageHeader } from '@/components/layout'
-import { DEMO_EVIDENCE, DEMO_WORKSPACE } from './__mocks__/demo-data'
 
 const SOURCE_TYPE_LABELS = {
   internal_study: 'Internal Study',
@@ -137,7 +136,7 @@ export default function EvidenceLibraryPage() {
               !
             </div>
             <div>
-              <p className="text-sm font-medium text-amber-700">Demo mode — evidence endpoints not yet implemented</p>
+              <p className="text-sm font-medium text-amber-700">Demo mode — changes are not persisted</p>
               <p className="text-xs text-amber-600 mt-1">
                 Displaying fictional demo data. No changes are persisted to the backend.
               </p>

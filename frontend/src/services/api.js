@@ -84,6 +84,8 @@ export const api = {
   getWorkspace: (workspaceId) => request('GET', `/workspaces/${workspaceId}`),
   getFacts: (workspaceId) => request('GET', `/workspaces/${workspaceId}/facts`),
   createFact: (workspaceId, fact) => request('POST', `/workspaces/${workspaceId}/facts`, fact),
+  updateFact: (workspaceId, factId, fact) =>
+    request('PATCH', `/workspaces/${workspaceId}/facts/${factId}`, fact),
   getEvidence: (workspaceId) => request('GET', `/workspaces/${workspaceId}/evidence`),
   submitContent: (workspaceId, content) => request('POST', `/workspaces/${workspaceId}/content`, content),
   getContentVersions: (workspaceId, contentItemId) =>
