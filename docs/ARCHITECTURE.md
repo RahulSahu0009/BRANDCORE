@@ -49,11 +49,15 @@ backend/src/
 ├── worker.py              # Cloudflare Worker entry point (ASGI bridge)
 └── app/
     ├── main.py            # FastAPI app factory, middleware, router registration
+    ├── auth/
+    │   ├── __init__.py    # Clerk auth module marker
+    │   ├── clerk.py       # Clerk JWT verification (RS256 via JWKS + pow())
+    │   └── dependencies.py # Workspace org → D1 workspace mapping + authorization
     ├── api/
-    │   ├── health.py      # GET /api/health
+    │   ├── health.py      # GET /api/health (public, no auth)
     │   ├── poc.py         # POC endpoints (D1, R2, Workers AI) — development only
     │   ├── dependencies.py # POC route security guard
-    │   └── analyze.py     # POST /api/workspaces/{id}/content/{vid}/analyze
+    │   └── analyze.py     # POST /api/workspaces/{id}/content/{vid}/analyze (auth required)
     ├── core/              # Config, logging, error handling
     ├── domain/            # Pydantic models and domain types
     ├── repositories/      # D1 and R2 access (parameterized SQL only)
@@ -74,6 +78,7 @@ backend/src/
 | `DB` | D1 | Backend only | Relational data store |
 | `ASSETS` | R2 | Backend only | Private evidence and asset storage |
 | `AI` | Workers AI | Backend only | Claim extraction and explanation |
+| `CLERK_ISSUER_URL` | Env var | Backend only | Clerk instance issuer URL for JWKS verification |
 
 The browser has no direct access to any binding. All binding access is through authenticated FastAPI routes.
 
@@ -345,6 +350,54 @@ All repositories live in `src/app/repositories/` and use parameterized SQL only.
 
 ---
 
+## 12. Clerk Authentication and Workspace Authorization (VERIFIED 2026-11-05)
+
+### 12.1 Authentication flow
+
+Clerk issues RS256-signed session JWTs. The backend verifies them without the Clerk SDK (no official Python SDK exists) using:
+
+1. **JWKS fetch** — `GET {CLERK_ISSUER_URL}/.well-known/jwks.json` with bounded TTL cache (5 min, max 1 entry).
+2. **RS256 signature verification** — Python's built-in `pow()` modular exponentiation + `hashlib.sha256`, implementing RSA-PKCS1v15 (`EM = sig^e mod n` → `0x00 || 0x01 || PS(0xFF*) || 0x00 || DigestInfo(SHA-256) || hash`). Stdlib only — no custom crypto primitives, Pyodide-compatible.
+3. **Claim validation** — `iss`, `exp`, `nbf`, `azp`, `sub`. Algorithm restricted to `RS256` only.
+4. **Organization context** — `org_id`, `org_role`, `org_permissions` extracted from Clerk claims.
+
+### 12.2 Workspace authorization
+
+Clerk Organizations map 1:1 to BRANDCORE workspaces via the `workspace_org_mapping` D1 table (migration `0005_clerk_workspace_mapping.sql`). The mapping table enforces:
+
+- `UNIQUE(workspace_id)` — one workspace → one Clerk org
+- `UNIQUE(org_id)` — one Clerk org → one workspace
+- Composite FK `workspace_id → workspace(id) ON DELETE RESTRICT`
+
+Authorization chain (enforced by `require_workspace_access` dependency):
+
+1. Valid Clerk session token → `ClerkUser`
+2. `org_id` present → active organization required (403 if missing)
+3. Workspace exists in D1 (404 if not)
+4. `org_id` maps to the requested `workspace_id` via `workspace_org_mapping` (403 if cross-org or unmapped)
+
+Permission model:
+- `org:admin` — all permissions, including admin actions
+- `org:member` — limited permissions; admin actions require `require_admin=True`
+
+### 12.3 Route protection
+
+| Route | Auth Required | Dependency |
+|-------|--------------|------------|
+| `GET /api/health` | No | None (public) |
+| `GET/POST /api/poc/*` | Dev env only | `require_development_env` |
+| `POST /api/workspaces/{id}/content/{vid}/analyze` | Yes | `require_workspace_access("workspace_id")` |
+| Product routes (review, release, etc.) | Yes | `require_workspace_access` + `require_workspace_permission` |
+
+### 12.4 Frontend integration
+
+- `ClerkProvider` wraps the React app (`frontend/src/main.jsx`)
+- Sign-in/sign-up, user profile, and organization switcher via Clerk components (`frontend/src/App.jsx`)
+- API client attaches `Authorization: Bearer <token>` using Clerk's `brandcore-api` JWT template on every request (`frontend/src/services/api.js`)
+- Relative `/api/*` paths only — no hardcoded origins
+
+---
+
 - Cloudflare Python Workers: https://developers.cloudflare.com/workers/languages/python/ (verify current docs)
 - Cloudflare D1: https://developers.cloudflare.com/d1/
 - Cloudflare R2: https://developers.cloudflare.com/r2/
@@ -353,4 +406,4 @@ All repositories live in `src/app/repositories/` and use parameterized SQL only.
 - Wrangler: https://developers.cloudflare.com/workers/wrangler/
 - Pywrangler: https://developers.cloudflare.com/workers/languages/python/packages/ (verify current name/package)
 
-*Last verified: 2026-11-05 — M2-01 through M2-07 and M3-01 through M3-05 VERIFIED; 130/130 backend tests pass; URLs are pointers; verify current content before implementation.*
+*Last verified: 2026-11-05 — M2-01 through M2-07, M3-01 through M3-05, and Clerk authentication VERIFIED; 192/192 backend tests pass; URLs are pointers; verify current content before implementation.*

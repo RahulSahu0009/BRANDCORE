@@ -32,7 +32,9 @@ export default function ReviewDecisionForm({ onSubmit, disabled = false, result 
         <h2 ref={confirmationRef} tabIndex={-1} className="font-semibold text-green-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-focus-ring">
           Decision recorded: {result.decision}
         </h2>
-        <p className="mt-1 text-sm text-green-800">Recorded at {new Date(result.timestamp).toLocaleString()}.</p>
+        <p className="mt-1 text-sm text-green-800">
+          Recorded at {new Date(result.timestamp || result.created_at).toLocaleString()}.
+        </p>
       </section>
     )
   }

@@ -56,16 +56,27 @@
 
 ---
 
+## Milestone 3.5 — Clerk Authentication & Workspace Authorization (Mritunjay)
+
+| ID | Task | Owner | Status | Depends On | Acceptance Criteria |
+|----|------|-------|--------|-----------|---------------------|
+| M3.5-01 | Clerk JWT verification module (RS256 via JWKS + pow()) | Mritunjay | VERIFIED | M3-05 | `src/app/auth/clerk.py`; `ClerkJwksClient` with bounded TTL cache; `verify_clerk_token()` validates iss/exp/nbf/azp/sub; RS256 verification via stdlib `pow()` + SHA-256; `ClerkUser` with org_id/org_role/org_permissions; `get_current_clerk_user` FastAPI dependency reads `CLERK_ISSUER_URL` from `request.scope["env"]`; 15 tests pass |
+| M3.5-02 | Workspace authorization dependencies | Mritunjay | VERIFIED | M3.5-01, M2-01 | `src/app/auth/dependencies.py`; `WorkspaceOrgMappingRepository` (parameterized SQL); `require_workspace_access()` enforces org → workspace mapping match (403 cross-org, 404 missing workspace); `require_workspace_permission()` enforces org:admin for admin actions; migration `0005_clerk_workspace_mapping.sql` with UNIQUE constraints; 20 tests pass |
+| M3.5-03 | API route protection | Mritunjay | VERIFIED | M3.5-02 | `src/app/main.py` — analyze router protected with `require_workspace_access`; health endpoint remains public; POC routes guarded by `require_development_env`; 9 API protection tests pass |
+| M3.5-04 | Frontend Clerk integration | Mritunjay | VERIFIED | M0-01 | `ClerkProvider` wraps app; UserButton/OrganizationSwitcher components; API client attaches `Authorization: Bearer <token>` via `getToken({template:'brandcore-api'})`; relative `/api/*` paths only; `npm run build` success |
+
+---
+
 ## Milestone 4 — Content Review UI (Rahul)
 
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
-| M4-01 | Content submission form (uses mock API until M3-05 is available) | Rahul | DONE | M0-01 | `ContentSubmissionForm.jsx` + `ContentReviewPage.jsx` in `frontend/src/features/content-review/`; labelled mock `__mocks__/contentApi.mock.js` behind `USE_MOCK_API` switch in `contentReviewApi.js`; loading/error/success states, field validation (contract limits 200/10000), focus management, live regions; `npm run build` success (49.88 kB gzip JS); rendered page screenshot checked. Interactive states NOT exercised by automated tests (no Vitest yet — needs ADR). Also fixed missing `tailwind.config.js`/`postcss.config.js` (Tailwind was not running) — 2026-11-05 |
-| M4-02 | Findings display: finding card component with all 7 finding types | Rahul | DONE | M4-01 | `FindingCard.jsx` maps all seven backend finding types to safe text labels, severity colors and correction guidance; no `dangerouslySetInnerHTML`; 2026-11-05 |
-| M4-03 | Review decision UI: approve / request changes / reject | Rahul | DONE | M4-02 | `ReviewDecisionForm.jsx` requires an explicit reviewer decision, submits notes, and shows confirmation; no auto-approval path; 2026-11-05 |
-| M4-04 | Content version history list | Rahul | DONE | M4-01 | `VersionHistory.jsx` lists immutable versions with status badges and timestamps; 2026-11-05 |
-| M4-05 | Replace mock API with real endpoints (M3-05, M2-06) | Rahul | BLOCKED | M3-05, M2-06 | Mock adapter now covers analysis/review/history and the API switch is wired for the documented endpoints; real content routes remain PROPOSED in `docs/API_CONTRACT.md`, so fixtures cannot yet be removed safely |
-| M4-06 | Accessibility pass: keyboard nav, focus order, axe scan | Rahul | IN PROGRESS | M4-05 | Semantic headings, labels, live regions, focus management and keyboard-safe controls added across the workflow; axe scan remains pending approved frontend test tooling and real endpoint integration |
+| M4-01 | Content submission form (uses mock API until M3-05 is available) | Rahul | DONE | M0-01 | Form submits content; shows loading/error/success states |
+| M4-02 | Findings display: finding card component with all 7 finding types | Rahul | DONE | M4-01 | Each finding type renders correctly; color + text label; no dangerouslySetInnerHTML |
+| M4-03 | Review decision UI: approve / request changes / reject | Rahul | DONE | M4-02 | Decision recorded; confirmation shown; no auto-approval path |
+| M4-04 | Content version history list | Rahul | DONE | M4-01 | Versions listed with status badges; immutability clear in UI |
+| M4-05 | Replace mock API with real endpoints (M3-05, M2-06) | Rahul | DONE | M3-05, M2-06 | Real authenticated API client now handles submission, analysis, version history, and review; mock adapter removed from the core workflow; frontend build and lint pass |
+| M4-06 | Accessibility pass: keyboard nav, focus order, axe scan | Rahul | IN PROGRESS | M4-05 | Semantic headings, labels, focus management and keyboard-safe controls are implemented; application-shell axe scan passes with 0 serious/critical violations; authenticated workflow verification remains blocked by Clerk auth configuration |
 
 ---
 
@@ -73,12 +84,29 @@
 
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
-| M5-01 | Approved facts list and create/edit form (uses mock API) | Arvind | TODO | M0-01 | Facts listed with scope, qualifier, evidence ref; form validates |
-| M5-02 | Evidence reference management UI | Arvind | TODO | M5-01 | Evidence records listed; linked to facts |
-| M5-03 | Release Passport list with status badges | Arvind | TODO | M0-01 | Passports listed; VALID/STALE/REVOKED/INVALID badges shown |
-| M5-04 | Stale impact view: which releases are affected by a fact change | Arvind | TODO | M5-03 | Stale releases listed with reason; revalidation action available |
-| M5-05 | Replace mock API with real endpoints (M2-05, M2-07) | Arvind | TODO | M2-05, M2-07 | Mock fixtures removed from core workflow; real API used |
-| M5-06 | Accessibility pass: keyboard nav, focus order, axe scan | Arvind | TODO | M5-05 | axe reports 0 serious/critical; full keyboard path works |
+| M5-01 | Approved facts list and create/edit form (uses mock API) | Arvind | DONE | M0-01 | Facts listed with scope, qualifier, evidence ref; form validates |
+| M5-02 | Evidence reference management UI | Arvind | DONE | M5-01 | Evidence records listed; linked to facts |
+| M5-03 | Release Passport list with status badges | Arvind | DONE | M0-01 | Passports listed; VALID/STALE/REVOKED/INVALID badges shown |
+| M5-04 | Stale impact view: which releases are affected by a fact change | Arvind | DONE | M5-03 | Stale releases listed with reason; revalidation action available |
+| M5-05 | Replace mock API with real endpoints (M2-05, M2-07) | Arvind | **VERIFIED** | M2-05, M2-07 | 6 API modules created and registered (workspaces, facts, evidence, content, review, releases); 48 integration tests pass; local Worker verified via wrangler dev --local — 2026-11-05 |
+| M5-06 | Accessibility pass: keyboard nav, focus order, axe scan | Arvind | IN PROGRESS | M5-05 | Application shell axe scan passes with 0 serious/critical violations; authenticated governance-page keyboard verification remains blocked by Clerk test configuration |
+
+---
+
+## UI Redesign — Premium Frontend (Mritunjay)
+
+| ID | Task | Owner | Status | Depends On | Acceptance Criteria |
+|----|------|-------|--------|-----------|---------------------|
+| UX-01 | Tailwind CSS design tokens (light + dark, class-based) | Mritunjay | DONE | M0-01 | `tailwind.config.js` with primitive/semantic/component tokens; `darkMode: 'class'` |
+| UX-02 | ThemeProvider with localStorage persistence | Mritunjay | DONE | UX-01 | Dark/light toggle persists preference; `ThemeToggle` accessible button |
+| UX-03 | Shared UI component library | Mritunjay | DONE | UX-02 | Button, StatusBadge, Card, EmptyState, Skeleton, ErrorState, DataTable, FormField; barrel export `@/components/ui` |
+| UX-04 | AppShell layout (Sidebar, TopBar, Breadcrumbs) | Mritunjay | DONE | UX-03 | Collapsible sidebar; workspace context; backend status indicator; mobile nav |
+| UX-05 | Approved Facts page (list + create/edit form) | Mritunjay | DONE | UX-04 | Facts table with search/filter; CRUD form; summary cards |
+| UX-06 | Evidence Library page | Mritunjay | DONE | UX-04 | Evidence list with type filters; linked facts display |
+| UX-07 | Release Governance page (list + passport + stale impact) | Mritunjay | DONE | UX-04 | Release list with VALID/STALE/REVOKED badges; passport drawer; stale impact |
+| UX-08 | Content Review page (submission + findings + review decision) | Mritunjay | DONE | UX-04 | Content submission; findings display; review decision UI |
+| UX-09 | API client with backend status tracking | Mritunjay | DONE | UX-04 | `api.js` with relative `/api/*` paths; Clerk token auth; `onBackendStatusChange` |
+| UX-10 | Production build verified | Mritunjay | DONE | UX-01–UX-09 | `npm run build` success; 122 modules transformed; no errors |
 
 ---
 
@@ -86,10 +114,8 @@
 
 | ID | Task | Owner | Status | Depends On | Acceptance Criteria |
 |----|------|-------|--------|-----------|---------------------|
-| M6-01 | End-to-end workflow test: submit → analyze → review → passport → stale | Mritunjay | TODO | M3-05, M4-05, M5-05 | All 11 steps in `docs/PRD.md` §4 complete without errors |
-| M6-02 | Security checklist review: update evidence for all verified controls | Mritunjay | TODO | M6-01 | All applicable controls have evidence; NOT APPLICABLE items documented |
-| M6-03 | Performance measurement: Lighthouse mobile on deployed build | Rahul | TODO | M6-01 | LCP, INP, CLS, JS budget measured and recorded in `docs/PRD.md` |
-| M6-04 | Final PR review and merge to main | All | TODO | M6-01–M6-03 | All gates pass; no TypeScript; no secrets; TASKS and MEMORY current |
+| M6-01 | End-to-end workflow test: submit → analyze → review → passport → stale | Mritunjay | IN PROGRESS | M3-05, M4-05, M5-05 | Release passport creation is now human-review-gated, server-hashed, immutable, and covered by `test_releases_api.py`; full AI-backed stale workflow still needs a configured authenticated environment |
+| M6-02 | Security checklist review: update evidence for all verified controls | Mritunjay | IN PROGRESS | M6-01 | Verified controls include D1-backed per-workspace AI limits and baseline response headers; deployment/CI-only controls remain explicitly unverified |
 
 ---
 

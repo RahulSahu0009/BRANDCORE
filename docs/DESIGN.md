@@ -1,20 +1,48 @@
 # BRANDCORE — Design System
 
-**Version:** 0.1.0 · **Authority:** This is the single source of truth for all BRANDCORE application UI.
-**Direction:** Professional editorial B2B governance workspace. Calm, precise, evidence-first.
+**Version:** 0.4.0 · **Authority:** This is the single source of truth for all BRANDCORE application UI.
+**Direction:** Refined editorial SaaS + forest-green identity + intelligent data presentation.
+Professional editorial B2B governance workspace. Calm, precise, evidence-first.
 Not a generic AI chat UI and not a cinematic marketing page.
+
+**Design seed:** Forest-green editorial enterprise (recorded as ADR-010). Single canonical source — all UI work references only this document.
 
 ---
 
 ## 1. Visual Direction
 
 BRANDCORE is a workspace for brand governance professionals. The visual language is:
-- **Calm and precise** — no decorative animation, no gradient hero sections
+- **Refined editorial SaaS** — clean, dense information presented clearly
+- **Forest-green identity** — deep forest green primary accent, restrained emerald states
 - **Evidence-first** — findings, evidence links and review status are always visible
-- **Editorial** — dense information presented clearly, not hidden behind cards
 - **Trustworthy** — consistent, predictable, no surprises
 
-Do not add a generic compliance score. Keep findings and evidence visible.
+Light theme:
+- Warm neutral background (`#F5F7FA`)
+- Clean white surfaces (`#FFFFFF`)
+- Deep forest-green primary accent (`#15803d`)
+- Restrained emerald states
+- Clear typography
+- Soft, consistent borders
+- Subtle depth
+
+Dark theme:
+- Deep charcoal/forest surfaces (`#0A0F17`)
+- Multiple clearly distinguishable elevation levels
+- Muted but readable secondary text
+- Refined green accents (`#34D399`)
+- Comfortable contrast
+
+Do not overload the UI with:
+- Neon effects
+- Random gradients
+- Excessive glassmorphism
+- Excessive shadows
+- Oversized headings
+- Unnecessary charts
+- Decorative elements without purpose
+
+Every visual decision must improve usability, hierarchy or brand identity.
 
 ---
 
@@ -23,41 +51,51 @@ Do not add a generic compliance score. Keep findings and evidence visible.
 ```css
 /* Canvas and surfaces */
 --canvas:        #F5F7FA;
+--canvas-dark:   #0A0F17;
 --surface:       #FFFFFF;
---surface-muted: #EEF2F6;
+--surface-dark:  #111827;
+--surface-muted: #F1F5F9;
+--surface-muted-dark: #1E293B;
+--surface-elevated: #FFFFFF;
+--surface-elevated-dark: #1F2937;
 
-/* Navy (primary text and headings) */
---navy-950:      #142235;
---navy-800:      #203750;
+/* Brand (forest green primary) */
+--green-700:     #15803d;
+--green-100:     #DCFCE7;
+--green-dark:    #34D399;
 
 /* Slate (secondary text and borders) */
 --slate-700:     #42556B;
 --slate-600:     #5C6D80;
 --slate-500:     #718197;
---border:        #DCE3EA;
+--slate-dark:    #94A3B8;
 
-/* Teal (primary action, success, approved) */
---teal-700:      #147A72;
---teal-100:      #DDF3EF;
+/* Border */
+--border:        #DCE3EA;
+--border-dark:   #334155;
 
 /* Amber (stale, warning) */
 --amber-700:     #986000;
 --amber-100:     #FFF1CC;
+--amber-dark:    #F0C674;
 
 /* Red (error, rejected, invalid) */
 --red-700:       #B42318;
 --red-100:       #FEE4E2;
+--red-dark:      #E87A6E;
 
-/* Green (valid, approved) */
---green-700:     #137547;
---green-100:     #DDF5E7;
+/* Brand text (navy in light, neutral in dark) */
+--brand-950:     #142235;
+--brand-dark:    #F8FAFC;
 
 /* Text */
 --text-primary:   #162638;
+--text-primary-dark: #F8FAFC;
 --text-secondary: #5C6D80;
+--text-secondary-dark: #94A3B8;
 
-/* Focus */
---focus-ring:    #2563EB;
+/* Focus ring */
+--focus-ring:    #15803d;
 ```
 
 **Contrast rule:** Check actual text/background contrast before shipping. Token names do not guarantee WCAG AA. Verify with a contrast checker.
@@ -104,42 +142,70 @@ Page padding: desktop 24px, tablet 16px, mobile 12–16px.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  BRANDCORE                    [Workspace: Demo Brand] │  ← Top nav (navy-950 bg)
+│  BRANDCORE                    [Workspace: Demo Brand] │  ← Top nav (surface bg, sticky, z-50)
 ├──────────────┬──────────────────────────────────────┤
 │              │                                       │
 │  Sidebar     │  Main content area                    │
-│  (240px)     │  (flex-1, canvas bg)                  │
+│  (256px /    │  (flex-1, canvas bg, offset for       │
+│   80px)      │   sidebar width)                      │
 │              │                                       │
 │  - Facts     │                                       │
 │  - Content   │                                       │
-│  - Review    │                                       │
 │  - Releases  │                                       │
-│              │                                       │
+│  - Evidence  │                                       │
 └──────────────┴──────────────────────────────────────┘
 ```
 
-- Top nav: `navy-950` background, white text, workspace selector
-- Sidebar: `surface` background, `border` right border, `slate-700` nav items
-- Active nav item: `teal-100` background, `teal-700` text
-- Main content: `canvas` background, 24px padding
+- Top nav: `surface` background, sticky, `border-b`, workspace context, theme toggle, Clerk auth controls (z-50)
+- Sidebar: `surface` background, `border-r`, collapsible (256px expanded / 80px collapsed), icon-only when collapsed with tooltips (z-40)
+- Active nav item: `bg-green-100` (light) / `bg-green-900/20` (dark), `text-green-700` (light) / `text-green-400` (dark)
+- Main content: `canvas` background, padding offset for sidebar width (`md:pl-64` expanded / `md:pl-20` collapsed, `pl-4` mobile)
+- Mobile: hamburger toggle (z-50) opens overlay drawer with backdrop, escape-to-close, body scroll locked
+
+**Sidebar collapse:** Preference persisted in `localStorage` under `brandcore-sidebar-collapsed`. No layout flash on init. Collapse toggle has `aria-expanded`, `aria-controls`, accessible name.
 
 ---
 
-## 6. Core Components
+## 6. Stacking Context (z-index)
+
+| Layer | z-index | Use |
+|-------|---------|-----|
+| Base content | 0 | Page content |
+| Sidebar | 40 | Fixed sidebar (desktop) |
+| Top bar | 50 | Sticky header (above sidebar) |
+| Mobile hamburger | 50 | Fixed toggle button |
+| Mobile backdrop | 50 | Drawer backdrop |
+| Drawer (mobile) | 50 | Mobile navigation drawer |
+| Modals/dialogs | 50 | Overlay dialogs |
+
+Do not use arbitrary `z-index: 9999`. Use the established layers above.
+
+---
+
+## 7. Core Components
 
 ### Status Badge
 
 Used for release status, finding severity and review decisions.
 
-| Status | Background | Text | Border |
-|--------|-----------|------|--------|
-| VALID / Approved | `green-100` | `green-700` | `green-700` |
-| STALE | `amber-100` | `amber-700` | `amber-700` |
-| REVOKED / Rejected | `red-100` | `red-700` | `red-700` |
-| INVALID | `red-100` | `red-700` | `red-700` |
-| Pending | `surface-muted` | `slate-700` | `border` |
+| Status | Light BG | Light Text | Dark BG | Dark Text |
+|--------|----------|------------|---------|-----------|
+| VALID / Approved | `bg-green-100` | `text-green-700` | `bg-green-900/20` | `text-green-400` |
+| STALE | `bg-amber-100` | `text-amber-700` | `bg-amber-900/20` | `text-amber-400` |
+| REVOKED / Rejected | `bg-red-100` | `text-red-700` | `bg-red-900/20` | `text-red-400` |
+| INVALID | `bg-red-100` | `text-red-700` | `bg-red-900/20` | `text-red-400` |
+| Pending | `bg-surface-muted` | `text-slate-700` | `bg-surface-muted` | `text-slate-500` |
 
 Always include a text label alongside color. Never use color as the only signal.
+
+### Button
+
+| Variant | Background | Text | Hover | Focus |
+|---------|-----------|------|-------|-------|
+| Primary | `bg-green-700` | white | `bg-green-800` | `ring-green-700` |
+| Secondary | `bg-surface` | `text-text-primary` | `bg-surface-muted` | `ring-slate-700` |
+| Danger | `bg-red-700` | white | `bg-red-800` | `ring-red-700` |
+| Ghost | transparent | `text-text-secondary` | `bg-surface-muted` | `ring-slate-700` |
 
 ### Finding Card
 
@@ -154,18 +220,9 @@ Always include a text label alongside color. Never use color as the only signal.
 └─────────────────────────────────────────────────────┘
 ```
 
-### Button
-
-| Variant | Background | Text | Border |
-|---------|-----------|------|--------|
-| Primary | `teal-700` | white | none |
-| Secondary | `surface` | `slate-700` | `border` |
-| Danger | `red-700` | white | none |
-| Disabled | `surface-muted` | `slate-500` | `border` |
-
 ---
 
-## 7. Component States
+## 8. Component States
 
 Every interactive component must have all applicable states:
 
@@ -173,18 +230,18 @@ Every interactive component must have all applicable states:
 |-------|-----------------|
 | Default | As defined in component spec |
 | Hover | Slightly darker background (5% darken) |
-| Focus-visible | `focus-ring` (#2563EB) 2px outline, 2px offset |
-| Disabled | `surface-muted` background, `slate-500` text, `not-allowed` cursor |
+| Focus-visible | `focus-ring` (#15803d) 2px outline, 2px offset |
+| Disabled | `opacity-50`, `pointer-events-none`, `cursor-not-allowed` |
 | Loading | Spinner or skeleton; no content shift |
 | Empty | Descriptive empty state with action if applicable |
-| Error | `red-100` background, `red-700` text, error icon, description |
-| Success | `green-100` background, `green-700` text, success icon |
+| Error | `border-red-100`/`dark:border-red-800/30`, `bg-red-50`/`dark:bg-red-900/20`, error icon, description |
+| Success | `bg-green-100`/`dark:bg-green-900/20`, `text-green-700`/`dark:text-green-400`, success icon |
 
 Every screen must have loading, empty, error and success states.
 
 ---
 
-## 8. WCAG 2.2 AA Target
+## 9. WCAG 2.2 AA Target
 
 - All text meets 4.5:1 contrast ratio (3:1 for large text ≥18px or bold ≥14px).
 - Every interactive element is keyboard accessible with visible focus indicator.
@@ -192,37 +249,128 @@ Every screen must have loading, empty, error and success states.
 - No information conveyed by color alone — always include text labels.
 - Form inputs have associated labels.
 - Error messages identify the field and describe the error.
+- Sidebar toggle has `aria-expanded`, `aria-controls`, accessible name, keyboard support.
+- Mobile drawer has Escape-to-close, backdrop click, focus management, body scroll lock.
 
 Verify with axe on the deployed build. Do not claim WCAG AA compliance until verified.
 
 ---
 
-## 9. Responsive Behavior
+## 10. Responsive Behavior
 
 | Breakpoint | Width | Layout |
 |-----------|-------|--------|
-| Mobile | < 640px | Single column; sidebar collapses to bottom nav or hamburger |
-| Tablet | 640px–1024px | Sidebar 200px; main content flex-1 |
-| Desktop | > 1024px | Sidebar 240px; main content flex-1; max-width 1280px centered |
+| Mobile | < 768px | Single column; hamburger toggle opens overlay drawer; sidebar hidden |
+| Tablet | ≥ 768px | Sidebar 256px; main content flex-1 |
+| Desktop | > 1024px | Sidebar 256px; main content flex-1 |
+
+Sidebar collapsed width: 80px (icon only, tooltips on hover).
+Content offset: `md:pl-64` expanded / `md:pl-20` collapsed; `pl-4` on mobile.
 
 ---
 
-## 10. Reduced Motion
+## 11. Dark Mode
 
-```css
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-```
-
-No animation communicates a critical status change. Status changes are always communicated via text.
+- **Theme provider:** Centralized `ThemeProvider` with class-based dark mode (`dark` class on `document.documentElement`)
+- **Persistence:** `localStorage` key `brandcore-theme`
+- **System preference:** `prefers-color-scheme` respected when no manual preference
+- **Initialization:** Theme applied before UI renders via `ThemeProvider` — no flash of incorrect theme
+- **Theme toggle:** Working toggle in main navigation (TopBar)
+- **Consistency:** Dark mode applied across every page, dialog, dropdown, and Clerk component
+- **No CSS inversion:** Semantic tokens used, not `invert()` or `filter`
 
 ---
 
-## 11. Performance Budget
+## 12. Motion Rules
+
+- All transitions and animations use `ease-out` or `ease-in-out` timing
+- Sidebar collapse/expand: `duration-300 ease-in-out` on width and transform
+- Mobile drawer slide: `duration-300 ease-in-out` on transform
+- Fade-in for page content: `duration-200 ease-out`
+- No animated backgrounds, marquee text, or decorative motion
+- **`prefers-reduced-motion: reduce`:** All animations and transitions are reduced to 0.01ms duration (see `src/styles.css`)
+
+---
+
+## 13. Workspace Onboarding
+
+When a signed-in Clerk user has an active Organization but no BRANDCORE workspace mapping:
+
+**Organization Admin/Owner:**
+- Presented with a "Create Workspace" action
+- Can enter a workspace display name and optional slug
+- Provisions workspace via protected backend POST `/api/workspaces/provision`
+- Uses verified Clerk organization ID
+- Mapping created atomically and idempotently
+- Shows success state and reloads into the new workspace
+
+**Organization Member:**
+- Informed that an organization administrator needs to set up the workspace
+- No administrator-only creation action shown
+- Directed to ask an admin, then refresh
+
+**Backend unavailable:** Retryable service error shown, not "no workspace access"
+
+**Organization unauthorized:** Access-denied state shown
+
+Never automatically maps to `ws_demo`. Never hardcodes workspace IDs. Never bypasses Clerk verification or backend authorization.
+
+---
+
+## 14. Backend Status Indicator
+
+Explicit statuses with no indefinite "Connecting" state:
+
+| Status | Meaning | User Action |
+|--------|---------|-------------|
+| `checking` | Initial health check in progress | None — transient |
+| `connected` | Backend reachable | None |
+| `offline` | Backend unreachable | Retry action available |
+| `unavailable` | Backend misconfigured | Retry action available |
+
+- Health check polls every 30 seconds
+- 401/403 responses are treated as `connected` (auth error, not backend offline)
+- Failed health requests reach a final state with retry action
+- Backend availability is separate from authentication status
+- Interval cleaned up on component unmount
+- No duplicate health requests
+
+---
+
+## 15. Authentication UI States
+
+| Auth state | UI behavior |
+|------------|-------------|
+| Clerk loading | "Signing in…" state, no API calls |
+| Signed out | Sign-in / Sign up buttons shown |
+| Signed in, no org | "No active organization" state, select org via Clerk |
+| Signed in, org no workspace | "No workspace access" state |
+| Authenticated, workspace ready | Full application with workspace data |
+| 401 response | "Session expired. Please sign in again." — no silent demo fallback |
+| 403 response | "You do not have access to this workspace." — no silent demo fallback |
+
+Demo mode (backend endpoints unavailable but auth valid): Clearly labeled amber banner, fictional data, no changes persisted.
+
+---
+
+## 16. API Loading and Error States
+
+| API result | UI behavior |
+|------------|-------------|
+| Loading | Skeleton or progress indicator |
+| 200 | Display actual returned data |
+| Empty result | Contextual empty state |
+| 401 | Sign-in / session-expired state |
+| 403 | Access denied |
+| 404 | Resource not found |
+| 422 | Validation errors |
+| 500 | Recoverable service error and retry |
+
+Prevent duplicate requests caused by repeated component renders. Do not hide backend failures. Do not silently replace live data with mocks.
+
+---
+
+## 17. Performance Budget
 
 | Metric | Target | Status |
 |--------|--------|--------|
@@ -235,7 +383,7 @@ Measure on the deployed build. If the JS budget is exceeded, document an ADR wit
 
 ---
 
-## 12. What Not to Do
+## 18. What Not to Do
 
 - No generic compliance score widget
 - No elaborate onboarding animations
@@ -243,4 +391,18 @@ Measure on the deployed build. If the JS budget is exceeded, document an ADR wit
 - No cinematic scroll effects
 - No large UI component libraries without an ADR
 - No separate color palette or component system per feature
-- No dark mode in Round 2 (document as Round 3 if needed)
+- No `z-index: 9999` — use established stacking layers
+- No hardcoded workspace IDs (`ws_demo`) — workspace resolved from Clerk org context
+- No silent demo fallback on auth errors (401/403)
+
+---
+
+## 19. Component Ownership
+
+- **Shared design system:** All components in `src/components/ui/` and `src/components/layout/`
+- **Sidebar and application shell:** Shared, used by all pages
+- **Theme architecture:** Shared `ThemeProvider`, `ThemeToggle`
+- **Content Review (Rahul):** May redesign page layouts, introduce new components, improve forms/modals within shared design system
+- **Brand Governance and Release Governance (Arvind):** May redesign page layouts, introduce new components, improve forms/modals within shared design system
+
+Rahul and Arvind have creative freedom within their assigned screens. Do not overwrite their changes or duplicate their work.
