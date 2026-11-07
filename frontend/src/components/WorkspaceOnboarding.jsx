@@ -5,10 +5,15 @@
 import { useState, useCallback } from 'react'
 import { useWorkspace } from '@/context/WorkspaceContext'
 import { api } from '@/services/api'
-import { Button, Card, CardBody, CardTitle, EmptyState } from '@/components/ui'
+import { Button, Card, CardBody, CardTitle } from '@/components/ui'
 
 export function WorkspaceOnboarding() {
-  const { workspaceId, setWorkspaceId, setWorkspaceName: ctxSetWorkspaceName, setAuthStatus } = useWorkspace()
+  const {
+    workspaceId,
+    setWorkspaceId,
+    setWorkspaceName: ctxSetWorkspaceName,
+    setAuthStatus,
+  } = useWorkspace()
   const [provisioning, setProvisioning] = useState(false)
   const [localWorkspaceName, setLocalWorkspaceName] = useState('')
   const [workspaceSlug, setWorkspaceSlug] = useState('')
